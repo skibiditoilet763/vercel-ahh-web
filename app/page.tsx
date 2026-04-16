@@ -13,8 +13,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-// Default Grafana URL - update this to your actual dashboard URL
-const DEFAULT_GRAFANA_URL = "http://localhost:3000/d/your-dashboard-id/your-dashboard-name?orgId=1&kiosk"
+// Your Grafana public dashboard URL
+const DEFAULT_GRAFANA_URL = "http://localhost:3000/public-dashboards/aadb4182c7ba434893f9c4f2311211e2"
 
 export default function GrafanaDashboard() {
   const [grafanaUrl, setGrafanaUrl] = useState(DEFAULT_GRAFANA_URL)
