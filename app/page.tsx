@@ -4,7 +4,7 @@ import { useState } from "react"
 import { RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-// Your 3 Grafana panel URLs
+// Your 5 Grafana panel URLs
 const GRAFANA_PANELS = [
   {
     id: 1,
@@ -19,7 +19,12 @@ const GRAFANA_PANELS = [
   {
     id: 3,
     title: "Panel 3",
-    url: "https://7c50-2402-800-61ca-7aea-a4bf-dfcb-eb0e-a8bc.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&theme=dark&refresh=5s&panelId=1",
+    url: "https://7c50-2402-800-61ca-7aea-a4bf-dfcb-eb0e-a8bc.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&theme=dark&refresh=5s&panelId=4",
+  },
+  {
+    id: 4,
+    title: "Panel 4",
+    url: "https://7c50-2402-800-61ca-7aea-a4bf-dfcb-eb0e-a8bc.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&theme=dark&refresh=5s&panelId=5",
   },
 ]
 
