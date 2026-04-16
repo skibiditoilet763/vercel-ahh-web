@@ -13,8 +13,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-// Your Grafana public dashboard URL
-const DEFAULT_GRAFANA_URL = "http://localhost:3000/public-dashboards/aadb4182c7ba434893f9c4f2311211e2"
+// Your Grafana dashboard URL via ngrok tunnel
+const DEFAULT_GRAFANA_URL = "https://ce6a-2402-800-61ca-7aea-a4bf-dfcb-eb0e-a8bc.ngrok-free.app/?orgId=1&from=now-6h&to=now&timezone=browser"
 
 export default function GrafanaDashboard() {
   const [grafanaUrl, setGrafanaUrl] = useState(DEFAULT_GRAFANA_URL)
@@ -159,23 +159,7 @@ export default function GrafanaDashboard() {
           allow="fullscreen"
         />
         
-        {/* Connection hint overlay - shows when default URL is used */}
-        {grafanaUrl === DEFAULT_GRAFANA_URL && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-lg">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/10">
-                <Settings className="h-6 w-6 text-orange-500" />
-              </div>
-              <h2 className="mb-2 text-lg font-semibold text-foreground">Configure Your Dashboard</h2>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Click the settings icon in the header to enter your Grafana dashboard URL from your local Docker instance.
-              </p>
-              <Button onClick={() => setIsSettingsOpen(true)}>
-                Open Settings
-              </Button>
-            </div>
-          </div>
-        )}
+
       </main>
     </div>
   )
