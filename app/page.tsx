@@ -12,7 +12,7 @@ const PANELS = [
   { id: "panel-1", title: "Panel 1" },
   { id: "panel-4", title: "Panel 4" },
   { id: "panel-3", title: "Panel 3" },
-  { id: "panel-1-2", title: "Panel 1 (Copy)" },
+  { id: "panel-5", title: "Panel 5" },
 ]
 
 // Time presets in milliseconds
@@ -36,8 +36,7 @@ export default function GrafanaDashboard() {
 
   // Build panel URL with current time range
   const buildPanelUrl = useCallback((panelId: string, from: number, to: number) => {
-    const actualPanelId = panelId.replace("-2", "") // Handle copy panel
-    return `${BASE_URL}?orgId=1&from=${Math.floor(from)}&to=${Math.floor(to)}&timezone=browser&refresh=5s&panelId=${actualPanelId}&__feature.dashboardSceneSolo=true`
+    return `${BASE_URL}?orgId=1&from=${Math.floor(from)}&to=${Math.floor(to)}&timezone=browser&refresh=5s&panelId=${panelId}&__feature.dashboardSceneSolo=true`
   }, [])
 
   // Update all panel iframes
