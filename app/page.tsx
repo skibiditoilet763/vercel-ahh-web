@@ -1,13 +1,16 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { RefreshCw, ZoomIn, ZoomOut, Clock, LogOut, User } from "lucide-react"
+import { RefreshCw, ZoomIn, ZoomOut, Clock, LogOut, User, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 // Base URL for Grafana panels
 const BASE_URL = "https://c54e-2402-800-61ca-7aea-7dee-f491-8847-8e3a.ngrok-free.app/d-solo/ad498n8/testing"
+
+// Grafana main page URL (admin only)
+const GRAFANA_MAIN_URL = "https://c54e-2402-800-61ca-7aea-7dee-f491-8847-8e3a.ngrok-free.app"
 
 // Test credentials (no database yet)
 const TEST_USERS = [
@@ -41,6 +44,7 @@ export default function GrafanaDashboard() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [currentUser, setCurrentUser] = useState("")
+  const [userRole, setUserRole] = useState("")
   const [error, setError] = useState("")
 
   const [refreshKey, setRefreshKey] = useState(0)
@@ -72,6 +76,7 @@ export default function GrafanaDashboard() {
     }
     
     setCurrentUser(user.username)
+    setUserRole(user.role)
     setIsLoggedIn(true)
     setUsername("")
     setPassword("")
@@ -81,6 +86,7 @@ export default function GrafanaDashboard() {
   const handleLogout = () => {
     setIsLoggedIn(false)
     setCurrentUser("")
+    setUserRole("")
   }
 
   // Animate time range changes
@@ -312,6 +318,19 @@ export default function GrafanaDashboard() {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
+
+          {/* Admin: Open Grafana */}
+          {userRole === "admin" && (
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-2 bg-orange-500 hover:bg-orange-600"
+              onClick={() => window.open(GRAFANA_MAIN_URL, "_blank")}
+            >
+              <ExternalLink className="h-4 w-4" />
+              Open Grafana
+            </Button>
+          )}
 
           {/* User & Logout */}
           <div className="ml-2 flex items-center gap-2 border-l border-border pl-4">
