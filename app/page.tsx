@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { RefreshCw } from "lucide-react"
+import { useState, useCallback, useRef, useEffect } from "react"
+import { RefreshCw, ZoomIn, ZoomOut, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 // Base URL for Grafana panels
@@ -15,18 +15,112 @@ const PANELS = [
   { id: "panel-5", title: "Panel 5" },
 ]
 
+// Time presets in milliseconds
+const TIME_PRESETS = [
+  { label: "15m", value: 15 * 60 * 1000 },
+  { label: "1H", value: 60 * 60 * 1000 },
+  { label: "6H", value: 6 * 60 * 60 * 1000 },
+  { label: "24H", value: 24 * 60 * 60 * 1000 },
+]
+
+// Cubic easing function for smooth animations
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
+
 export default function GrafanaDashboard() {
   const [refreshKey, setRefreshKey] = useState(0)
+  const [timeRange, setTimeRange] = useState({
+    from: Date.now() - 60 * 60 * 1000, // 1 hour ago
+    to: Date.now(),
+  })
+  const [activePreset, setActivePreset] = useState("1H")
+  const animationRef = useRef<number | null>(null)
 
-  // Build panel URL
-  const buildPanelUrl = useCallback((panelId: string) => {
-    return `${BASE_URL}?orgId=1&from=now-1h&to=now&timezone=browser&refresh=5s&panelId=${panelId}&__feature.dashboardSceneSolo=true`
+  // Animate time range changes
+  const animateToRange = useCallback((targetFrom: number, targetTo: number, presetLabel?: string) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current)
+    }
+
+    const startFrom = timeRange.from
+    const startTo = timeRange.to
+    const startTime = performance.now()
+    const duration = 400
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = easeInOutCubic(progress)
+
+      const newFrom = startFrom + (targetFrom - startFrom) * eased
+      const newTo = startTo + (targetTo - startTo) * eased
+
+      setTimeRange({ from: newFrom, to: newTo })
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate)
+      } else {
+        if (presetLabel) setActivePreset(presetLabel)
+        setRefreshKey((prev) => prev + 1)
+      }
+    }
+
+    animationRef.current = requestAnimationFrame(animate)
+  }, [timeRange])
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
+    }
   }, [])
+
+  // Build panel URL with current time range
+  const buildPanelUrl = useCallback((panelId: string) => {
+    return `${BASE_URL}?orgId=1&from=${Math.floor(timeRange.from)}&to=${Math.floor(timeRange.to)}&timezone=browser&refresh=5s&panelId=${panelId}&__feature.dashboardSceneSolo=true`
+  }, [timeRange])
 
   // Refresh all panels
   const handleRefresh = useCallback(() => {
+    const range = timeRange.to - timeRange.from
+    const now = Date.now()
+    setTimeRange({ from: now - range, to: now })
     setRefreshKey((prev) => prev + 1)
-  }, [])
+  }, [timeRange])
+
+  // Zoom in (reduce time range by 50%)
+  const handleZoomIn = useCallback(() => {
+    const center = (timeRange.from + timeRange.to) / 2
+    const halfRange = (timeRange.to - timeRange.from) / 4
+    animateToRange(center - halfRange, center + halfRange)
+    setActivePreset("")
+  }, [timeRange, animateToRange])
+
+  // Zoom out (increase time range by 100%)
+  const handleZoomOut = useCallback(() => {
+    const center = (timeRange.from + timeRange.to) / 2
+    const halfRange = (timeRange.to - timeRange.from)
+    animateToRange(center - halfRange, center + halfRange)
+    setActivePreset("")
+  }, [timeRange, animateToRange])
+
+  // Apply time preset
+  const handlePreset = useCallback((preset: { label: string; value: number }) => {
+    const now = Date.now()
+    animateToRange(now - preset.value, now, preset.label)
+  }, [animateToRange])
+
+  // Format time range for display
+  const formatTimeRange = useCallback(() => {
+    const range = timeRange.to - timeRange.from
+    if (range < 60 * 1000) return `${Math.round(range / 1000)}s`
+    if (range < 60 * 60 * 1000) return `${Math.round(range / (60 * 1000))}m`
+    if (range < 24 * 60 * 60 * 1000) return `${(range / (60 * 60 * 1000)).toFixed(1)}h`
+    return `${(range / (24 * 60 * 60 * 1000)).toFixed(1)}d`
+  }, [timeRange])
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -49,15 +143,62 @@ export default function GrafanaDashboard() {
           <h1 className="text-lg font-semibold text-foreground">Grafana Dashboard</h1>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          className="gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh All
-        </Button>
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          {/* Time Range Indicator */}
+          <div className="flex items-center gap-1.5 rounded-md bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            <span>{formatTimeRange()}</span>
+          </div>
+
+          {/* Time Presets */}
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1">
+            {TIME_PRESETS.map((preset) => (
+              <Button
+                key={preset.label}
+                variant={activePreset === preset.label ? "default" : "ghost"}
+                size="sm"
+                className="h-7 px-2.5 text-xs"
+                onClick={() => handlePreset(preset)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleZoomIn}
+              title="Zoom In"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleZoomOut}
+              title="Zoom Out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Refresh */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </header>
 
       {/* Dashboard Grid */}
