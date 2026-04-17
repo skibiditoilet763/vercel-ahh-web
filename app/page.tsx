@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { RefreshCw, ZoomIn, ZoomOut, Clock } from "lucide-react"
+import { RefreshCw, ZoomIn, ZoomOut, Clock, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 // Base URL for Grafana panels
 const BASE_URL = "https://c54e-2402-800-61ca-7aea-7dee-f491-8847-8e3a.ngrok-free.app/d-solo/ad498n8/testing"
@@ -29,13 +31,42 @@ function easeInOutCubic(t: number): number {
 }
 
 export default function GrafanaDashboard() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [currentUser, setCurrentUser] = useState("")
+  const [error, setError] = useState("")
+
   const [refreshKey, setRefreshKey] = useState(0)
   const [timeRange, setTimeRange] = useState({
-    from: Date.now() - 60 * 60 * 1000, // 1 hour ago
+    from: Date.now() - 60 * 60 * 1000,
     to: Date.now(),
   })
   const [activePreset, setActivePreset] = useState("1H")
   const animationRef = useRef<number | null>(null)
+
+  // Simple login handler (no DB, just checks if fields are filled)
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    
+    if (!username.trim() || !password.trim()) {
+      setError("Please enter both username and password")
+      return
+    }
+    
+    // Simple validation - any non-empty credentials work for now
+    setCurrentUser(username)
+    setIsLoggedIn(true)
+    setUsername("")
+    setPassword("")
+  }
+
+  // Logout handler
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    setCurrentUser("")
+  }
 
   // Animate time range changes
   const animateToRange = useCallback((targetFrom: number, targetTo: number, presetLabel?: string) => {
@@ -122,6 +153,68 @@ export default function GrafanaDashboard() {
     return `${(range / (24 * 60 * 60 * 1000)).toFixed(1)}d`
   }, [timeRange])
 
+  // Login page
+  if (!isLoggedIn) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-lg">
+          <div className="mb-6 flex flex-col items-center gap-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-500">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-6 w-6 text-white"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M9 21V9" />
+              </svg>
+            </div>
+            <h1 className="text-xl font-semibold text-foreground">Grafana Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Sign in to view the dashboard</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-500">{error}</p>
+            )}
+
+            <Button type="submit" className="w-full">
+              Sign In
+            </Button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // Dashboard (after login)
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       {/* Header */}
@@ -198,6 +291,23 @@ export default function GrafanaDashboard() {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
+
+          {/* User & Logout */}
+          <div className="ml-2 flex items-center gap-2 border-l border-border pl-4">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>{currentUser}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
