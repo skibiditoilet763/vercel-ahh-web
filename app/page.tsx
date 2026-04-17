@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label"
 // Base URL for Grafana panels
 const BASE_URL = "https://c54e-2402-800-61ca-7aea-7dee-f491-8847-8e3a.ngrok-free.app/d-solo/ad498n8/testing"
 
+// Test credentials (no database yet)
+const TEST_USERS = [
+  { username: "admin", password: "admin123", role: "admin" },
+  { username: "user", password: "user123", role: "customer" },
+]
+
 // Panel configurations
 const PANELS = [
   { id: "panel-1", title: "Panel 1" },
@@ -45,7 +51,7 @@ export default function GrafanaDashboard() {
   const [activePreset, setActivePreset] = useState("1H")
   const animationRef = useRef<number | null>(null)
 
-  // Simple login handler (no DB, just checks if fields are filled)
+  // Simple login handler with hardcoded test credentials
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -55,8 +61,17 @@ export default function GrafanaDashboard() {
       return
     }
     
-    // Simple validation - any non-empty credentials work for now
-    setCurrentUser(username)
+    // Check against test credentials
+    const user = TEST_USERS.find(
+      (u) => u.username === username && u.password === password
+    )
+    
+    if (!user) {
+      setError("Invalid username or password")
+      return
+    }
+    
+    setCurrentUser(user.username)
     setIsLoggedIn(true)
     setUsername("")
     setPassword("")
@@ -208,6 +223,12 @@ export default function GrafanaDashboard() {
             <Button type="submit" className="w-full">
               Sign In
             </Button>
+
+            <div className="mt-2 rounded-md bg-muted p-3 text-xs text-muted-foreground">
+              <p className="font-medium mb-1">Test Credentials:</p>
+              <p>Admin: <span className="font-mono">admin</span> / <span className="font-mono">admin123</span></p>
+              <p>User: <span className="font-mono">user</span> / <span className="font-mono">user123</span></p>
+            </div>
           </form>
         </div>
       </div>
