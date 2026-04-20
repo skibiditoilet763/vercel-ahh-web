@@ -60,10 +60,25 @@ export default function DucsDashboard() {
   const [activePreset, setActivePreset] = useState("1H")
   const animationRef = useRef<number | null>(null)
   
-  // Signal history tracking
+  // Signal history tracking (admin only)
   const [signalHistory, setSignalHistory] = useState<SignalRecord[]>([])
   const [maxConcurrentSignals, setMaxConcurrentSignals] = useState(0)
   const signalIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Load signal history from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem("duc_signal_history")
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        setSignalHistory(parsed)
+        const max = Math.max(...parsed.map((r: SignalRecord) => r.activeSignals))
+        setMaxConcurrentSignals(max)
+      } catch (e) {
+        console.log("[v0] Error loading signal history:", e)
+      }
+    }
+  }, [])
 
   // Simple login handler with hardcoded test credentials
   const handleLogin = (e: React.FormEvent) => {
@@ -113,6 +128,9 @@ export default function DucsDashboard() {
         // Update max concurrent signals
         const max = Math.max(...updated.map((r) => r.activeSignals))
         setMaxConcurrentSignals(max)
+        
+        // Save to localStorage
+        localStorage.setItem("duc_signal_history", JSON.stringify(updated))
         
         return updated
       })
