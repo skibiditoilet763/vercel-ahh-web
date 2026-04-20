@@ -761,7 +761,7 @@ export function TimeRangePicker({
             </div>
 
             {/* Quick Ranges List */}
-            <ScrollArea className="flex-1 pr-3">
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-muted/30 scrollbar-thumb-muted-foreground/50 hover:scrollbar-thumb-muted-foreground/70 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-muted/30 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/70">
               <div className="p-1 pr-2">
                 {filteredRanges.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
@@ -779,8 +779,7 @@ export function TimeRangePicker({
                   ))
                 )}
               </div>
-              <ScrollBar className="w-2 bg-muted/30" />
-            </ScrollArea>
+            </div>
           </div>
         </div>
       </PopoverContent>
