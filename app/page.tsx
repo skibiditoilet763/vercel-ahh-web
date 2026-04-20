@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 // Base URL for Grafana panels
-const BASE_URL = "https://c54e-2402-800-61ca-7aea-7dee-f491-8847-8e3a.ngrok-free.app/d-solo/ad498n8/testing"
+const BASE_URL = "https://6387-2402-800-61ca-7aea-d56-cd0c-31c8-2816.ngrok-free.app/d-solo/ad498n8/testing"
 
 // Grafana main page URL (admin only)
 const GRAFANA_MAIN_URL = "https://6387-2402-800-61ca-7aea-d56-cd0c-31c8-2816.ngrok-free.app"
