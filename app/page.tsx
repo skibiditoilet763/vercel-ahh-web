@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { RefreshCw, ZoomIn, ZoomOut, Clock, LogOut, User, ExternalLink } from "lucide-react"
+import { RefreshCw, ZoomIn, ZoomOut, Clock, LogOut, User, ExternalLink, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,10 +20,10 @@ const TEST_USERS = [
 
 // Panel configurations
 const PANELS = [
-  { id: "panel-1", title: "Panel 1" },
-  { id: "panel-4", title: "Panel 4" },
-  { id: "panel-3", title: "Panel 3" },
-  { id: "panel-5", title: "Panel 5" },
+  { id: "panel-1", title: "Signal Stream 1" },
+  { id: "panel-4", title: "Signal Stream 2" },
+  { id: "panel-3", title: "Signal Stream 3" },
+  { id: "panel-5", title: "Signal Stream 4" },
 ]
 
 // Time presets in milliseconds
@@ -34,12 +34,17 @@ const TIME_PRESETS = [
   { label: "24H", value: 24 * 60 * 60 * 1000 },
 ]
 
+interface SignalRecord {
+  timestamp: number
+  activeSignals: number
+}
+
 // Cubic easing function for smooth animations
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }
 
-export default function GrafanaDashboard() {
+export default function DucsDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -54,6 +59,11 @@ export default function GrafanaDashboard() {
   })
   const [activePreset, setActivePreset] = useState("1H")
   const animationRef = useRef<number | null>(null)
+  
+  // Signal history tracking
+  const [signalHistory, setSignalHistory] = useState<SignalRecord[]>([])
+  const [maxConcurrentSignals, setMaxConcurrentSignals] = useState(0)
+  const signalIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Simple login handler with hardcoded test credentials
   const handleLogin = (e: React.FormEvent) => {
@@ -80,13 +90,47 @@ export default function GrafanaDashboard() {
     setIsLoggedIn(true)
     setUsername("")
     setPassword("")
+    
+    // Start tracking signals after login
+    startSignalTracking()
   }
+
+  // Start tracking signal count
+  const startSignalTracking = useCallback(() => {
+    // Generate random signal count every 2 seconds
+    signalIntervalRef.current = setInterval(() => {
+      const randomSignals = Math.floor(Math.random() * 100) + 1
+      const newRecord: SignalRecord = {
+        timestamp: Date.now(),
+        activeSignals: randomSignals,
+      }
+      
+      setSignalHistory((prev) => {
+        const updated = [...prev, newRecord]
+        // Keep last 30 records (1 minute of data)
+        if (updated.length > 30) updated.shift()
+        
+        // Update max concurrent signals
+        const max = Math.max(...updated.map((r) => r.activeSignals))
+        setMaxConcurrentSignals(max)
+        
+        return updated
+      })
+    }, 2000)
+  }, [])
 
   // Logout handler
   const handleLogout = () => {
     setIsLoggedIn(false)
     setCurrentUser("")
     setUserRole("")
+    
+    // Clear signal tracking
+    if (signalIntervalRef.current) {
+      clearInterval(signalIntervalRef.current)
+    }
+    setSignalHistory([])
+    setMaxConcurrentSignals(0)
   }
 
   // Animate time range changes
@@ -126,6 +170,9 @@ export default function GrafanaDashboard() {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
+      }
+      if (signalIntervalRef.current) {
+        clearInterval(signalIntervalRef.current)
       }
     }
   }, [])
@@ -174,27 +221,24 @@ export default function GrafanaDashboard() {
     return `${(range / (24 * 60 * 60 * 1000)).toFixed(1)}d`
   }, [timeRange])
 
+  // Get current active signals
+  const currentActiveSignals = signalHistory.length > 0 
+    ? signalHistory[signalHistory.length - 1].activeSignals 
+    : 0
+
   // Login page
   if (!isLoggedIn) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-lg">
-          <div className="mb-6 flex flex-col items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-500">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-6 w-6 text-white"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M3 9h18" />
-                <path d="M9 21V9" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-semibold text-foreground">Grafana Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Sign in to view the dashboard</p>
+          <div className="mb-6 flex flex-col items-center gap-3">
+            <img 
+              src="/ducs-logo.jpg" 
+              alt="Duc's Dashboard Logo" 
+              className="h-16 w-16 rounded-lg object-cover"
+            />
+            <h1 className="text-2xl font-bold text-cyan-400">Duc&apos;s Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Real-Time Signal Monitoring</p>
           </div>
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
@@ -226,14 +270,14 @@ export default function GrafanaDashboard() {
               <p className="text-sm text-red-500">{error}</p>
             )}
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
               Sign In
             </Button>
 
             <div className="mt-2 rounded-md bg-muted p-3 text-xs text-muted-foreground">
               <p className="font-medium mb-1">Test Credentials:</p>
-              <p>Admin: <span className="font-mono">admin</span> / <span className="font-mono">admin123</span></p>
-              <p>User: <span className="font-mono">user</span> / <span className="font-mono">user123</span></p>
+              <p>Admin: <span className="font-mono text-cyan-400">admin</span> / <span className="font-mono text-cyan-400">admin123</span></p>
+              <p>User: <span className="font-mono text-cyan-400">user</span> / <span className="font-mono text-cyan-400">user123</span></p>
             </div>
           </form>
         </div>
@@ -245,26 +289,37 @@ export default function GrafanaDashboard() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       {/* Header */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-5 w-5 text-white"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18" />
-              <path d="M9 21V9" />
-            </svg>
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6 gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <img 
+            src="/ducs-logo.jpg" 
+            alt="Logo" 
+            className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
+          />
+          <div className="flex flex-col gap-0 min-w-0">
+            <h1 className="text-lg font-bold text-cyan-400 truncate">Duc&apos;s Dashboard</h1>
+            <p className="text-xs text-muted-foreground">Real-Time Signal Monitor</p>
           </div>
-          <h1 className="text-lg font-semibold text-foreground">Grafana Dashboard</h1>
+        </div>
+
+        {/* Signal Stats */}
+        <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted/30 border border-cyan-500/20">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-cyan-400" />
+            <div className="flex flex-col gap-0">
+              <span className="text-xs text-muted-foreground">Current Signals</span>
+              <span className="text-sm font-bold text-cyan-400">{currentActiveSignals}</span>
+            </div>
+          </div>
+          <div className="w-px h-6 bg-border" />
+          <div className="flex flex-col gap-0">
+            <span className="text-xs text-muted-foreground">Max Concurrent</span>
+            <span className="text-sm font-bold text-cyan-400">{maxConcurrentSignals}</span>
+          </div>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           {/* Time Range Indicator */}
           <div className="flex items-center gap-1.5 rounded-md bg-muted px-3 py-1.5 text-sm text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
@@ -324,11 +379,11 @@ export default function GrafanaDashboard() {
             <Button
               variant="default"
               size="sm"
-              className="gap-2 bg-orange-500 hover:bg-orange-600"
+              className="gap-2 bg-cyan-500 hover:bg-cyan-600 text-black font-semibold"
               onClick={() => window.open(GRAFANA_MAIN_URL, "_blank")}
             >
               <ExternalLink className="h-4 w-4" />
-              Open Grafana
+              Grafana
             </Button>
           )}
 
@@ -352,17 +407,17 @@ export default function GrafanaDashboard() {
       </header>
 
       {/* Dashboard Grid */}
-      <main className="flex-1 p-6">
-        <div className="grid h-full gap-4 grid-cols-1 md:grid-cols-2">
+      <main className="flex-1 p-6 overflow-auto">
+        <div className="grid h-full gap-4 grid-cols-1 md:grid-cols-2 auto-rows-max">
           {PANELS.map((panel) => (
             <div
               key={panel.id}
-              className="flex flex-col overflow-hidden rounded-lg border border-border bg-card"
+              className="flex flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-cyan-500/50 transition-colors"
             >
-              <div className="flex items-center border-b border-border px-4 py-2">
-                <h2 className="text-sm font-medium text-foreground">{panel.title}</h2>
+              <div className="flex items-center border-b border-border px-4 py-3 bg-muted/20">
+                <h2 className="text-sm font-semibold text-foreground">{panel.title}</h2>
               </div>
-              <div className="relative flex-1 min-h-[200px]">
+              <div className="relative flex-1 min-h-[250px]">
                 <iframe
                   key={`${panel.id}-${refreshKey}`}
                   src={buildPanelUrl(panel.id)}
