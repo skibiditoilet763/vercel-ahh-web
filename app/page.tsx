@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { RefreshCw, ZoomIn, ZoomOut, Clock, LogOut, User, ExternalLink, TrendingUp } from "lucide-react"
+import { RefreshCw, ZoomIn, ZoomOut, LogOut, User, ExternalLink, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { TimeRangePicker } from "@/components/time-range-picker"
 
 // Base URL for Grafana panels
 const BASE_URL = "https://6387-2402-800-61ca-7aea-d56-cd0c-31c8-2816.ngrok-free.app/d-solo/ad498n8/testing"
@@ -26,18 +27,7 @@ const PANELS = [
   { id: "panel-5", title: "Signal Stream 4" },
 ]
 
-// Time presets in milliseconds
-const TIME_PRESETS = [
-  { label: "15m", value: 15 * 60 * 1000 },
-  { label: "1H", value: 60 * 60 * 1000 },
-  { label: "6H", value: 6 * 60 * 60 * 1000 },
-  { label: "24H", value: 24 * 60 * 60 * 1000 },
-  { label: "1W", value: 7 * 24 * 60 * 60 * 1000 },
-  { label: "1M", value: 30 * 24 * 60 * 60 * 1000 },
-  { label: "1Y", value: 365 * 24 * 60 * 60 * 1000 },
-  { label: "5Y", value: 5 * 365 * 24 * 60 * 60 * 1000 },
-  { label: "10Y", value: 10 * 365 * 24 * 60 * 60 * 1000 },
-]
+
 
 interface SignalRecord {
   timestamp: number
@@ -62,7 +52,6 @@ export default function DucsDashboard() {
     from: Date.now() - 60 * 60 * 1000,
     to: Date.now(),
   })
-  const [activePreset, setActivePreset] = useState("1H")
   const animationRef = useRef<number | null>(null)
 
   // Signal history tracking (admin only)
@@ -157,7 +146,7 @@ export default function DucsDashboard() {
   }
 
   // Animate time range changes
-  const animateToRange = useCallback((targetFrom: number, targetTo: number, presetLabel?: string) => {
+  const animateToRange = useCallback((targetFrom: number, targetTo: number) => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current)
     }
@@ -180,7 +169,6 @@ export default function DucsDashboard() {
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate)
       } else {
-        if (presetLabel) setActivePreset(presetLabel)
         setRefreshKey((prev) => prev + 1)
       }
     }
@@ -218,7 +206,6 @@ export default function DucsDashboard() {
     const center = (timeRange.from + timeRange.to) / 2
     const halfRange = (timeRange.to - timeRange.from) / 4
     animateToRange(center - halfRange, center + halfRange)
-    setActivePreset("")
   }, [timeRange, animateToRange])
 
   // Zoom out (increase time range by 100%)
@@ -226,34 +213,12 @@ export default function DucsDashboard() {
     const center = (timeRange.from + timeRange.to) / 2
     const halfRange = (timeRange.to - timeRange.from)
     animateToRange(center - halfRange, center + halfRange)
-    setActivePreset("")
   }, [timeRange, animateToRange])
 
-  // Apply time preset
-  const handlePreset = useCallback((preset: { label: string; value: number }) => {
-    const now = Date.now()
-    animateToRange(now - preset.value, now, preset.label)
+  // Handle time range change from picker
+  const handleTimeRangeChange = useCallback((newRange: { from: number; to: number }) => {
+    animateToRange(newRange.from, newRange.to)
   }, [animateToRange])
-
-  // Format time range for display
-  const formatTimeRange = useCallback(() => {
-    const range = timeRange.to - timeRange.from
-    const seconds = range / 1000
-    const minutes = seconds / 60
-    const hours = minutes / 60
-    const days = hours / 24
-    const weeks = days / 7
-    const months = days / 30
-    const years = days / 365
-
-    if (seconds < 60) return `${Math.round(seconds)}s`
-    if (minutes < 60) return `${Math.round(minutes)}m`
-    if (hours < 24) return `${hours.toFixed(1)}h`
-    if (days < 7) return `${days.toFixed(1)}d`
-    if (weeks < 4) return `${weeks.toFixed(1)}w`
-    if (months < 12) return `${months.toFixed(1)}mo`
-    return `${years.toFixed(1)}y`
-  }, [timeRange])
 
   // Get current active signals
   const currentActiveSignals = signalHistory.length > 0
@@ -354,26 +319,11 @@ export default function DucsDashboard() {
 
         {/* Controls */}
         <div className="flex items-center gap-2 ml-auto">
-          {/* Time Range Indicator */}
-          <div className="flex items-center gap-1.5 rounded-md bg-muted px-3 py-1.5 text-sm text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" />
-            <span>{formatTimeRange()}</span>
-          </div>
-
-          {/* Time Presets */}
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1">
-            {TIME_PRESETS.map((preset) => (
-              <Button
-                key={preset.label}
-                variant={activePreset === preset.label ? "default" : "ghost"}
-                size="sm"
-                className="h-7 px-2.5 text-xs"
-                onClick={() => handlePreset(preset)}
-              >
-                {preset.label}
-              </Button>
-            ))}
-          </div>
+          {/* Time Range Picker */}
+          <TimeRangePicker
+            timeRange={timeRange}
+            onTimeRangeChange={handleTimeRangeChange}
+          />
 
           {/* Zoom Controls */}
           <div className="flex items-center gap-1">
