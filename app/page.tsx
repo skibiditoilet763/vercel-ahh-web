@@ -32,6 +32,11 @@ const TIME_PRESETS = [
   { label: "1H", value: 60 * 60 * 1000 },
   { label: "6H", value: 6 * 60 * 60 * 1000 },
   { label: "24H", value: 24 * 60 * 60 * 1000 },
+  { label: "1W", value: 7 * 24 * 60 * 60 * 1000 },
+  { label: "1M", value: 30 * 24 * 60 * 60 * 1000 },
+  { label: "1Y", value: 365 * 24 * 60 * 60 * 1000 },
+  { label: "5Y", value: 5 * 365 * 24 * 60 * 60 * 1000 },
+  { label: "10Y", value: 10 * 365 * 24 * 60 * 60 * 1000 },
 ]
 
 interface SignalRecord {
@@ -233,10 +238,21 @@ export default function DucsDashboard() {
   // Format time range for display
   const formatTimeRange = useCallback(() => {
     const range = timeRange.to - timeRange.from
-    if (range < 60 * 1000) return `${Math.round(range / 1000)}s`
-    if (range < 60 * 60 * 1000) return `${Math.round(range / (60 * 1000))}m`
-    if (range < 24 * 60 * 60 * 1000) return `${(range / (60 * 60 * 1000)).toFixed(1)}h`
-    return `${(range / (24 * 60 * 60 * 1000)).toFixed(1)}d`
+    const seconds = range / 1000
+    const minutes = seconds / 60
+    const hours = minutes / 60
+    const days = hours / 24
+    const weeks = days / 7
+    const months = days / 30
+    const years = days / 365
+
+    if (seconds < 60) return `${Math.round(seconds)}s`
+    if (minutes < 60) return `${Math.round(minutes)}m`
+    if (hours < 24) return `${hours.toFixed(1)}h`
+    if (days < 7) return `${days.toFixed(1)}d`
+    if (weeks < 4) return `${weeks.toFixed(1)}w`
+    if (months < 12) return `${months.toFixed(1)}mo`
+    return `${years.toFixed(1)}y`
   }, [timeRange])
 
   // Get current active signals
