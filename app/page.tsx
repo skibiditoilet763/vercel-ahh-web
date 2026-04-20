@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 const BASE_URL = "https://c54e-2402-800-61ca-7aea-7dee-f491-8847-8e3a.ngrok-free.app/d-solo/ad498n8/testing"
 
 // Grafana main page URL (admin only)
-const GRAFANA_MAIN_URL = "https://c54e-2402-800-61ca-7aea-7dee-f491-8847-8e3a.ngrok-free.app"
+const GRAFANA_MAIN_URL = "https://6387-2402-800-61ca-7aea-d56-cd0c-31c8-2816.ngrok-free.app"
 
 // Test credentials (no database yet)
 const TEST_USERS = [
@@ -59,7 +59,7 @@ export default function DucsDashboard() {
   })
   const [activePreset, setActivePreset] = useState("1H")
   const animationRef = useRef<number | null>(null)
-  
+
   // Signal history tracking (admin only)
   const [signalHistory, setSignalHistory] = useState<SignalRecord[]>([])
   const [maxConcurrentSignals, setMaxConcurrentSignals] = useState(0)
@@ -84,28 +84,28 @@ export default function DucsDashboard() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    
+
     if (!username.trim() || !password.trim()) {
       setError("Please enter both username and password")
       return
     }
-    
+
     // Check against test credentials
     const user = TEST_USERS.find(
       (u) => u.username === username && u.password === password
     )
-    
+
     if (!user) {
       setError("Invalid username or password")
       return
     }
-    
+
     setCurrentUser(user.username)
     setUserRole(user.role)
     setIsLoggedIn(true)
     setUsername("")
     setPassword("")
-    
+
     // Start tracking signals after login
     startSignalTracking()
   }
@@ -119,19 +119,19 @@ export default function DucsDashboard() {
         timestamp: Date.now(),
         activeSignals: randomSignals,
       }
-      
+
       setSignalHistory((prev) => {
         const updated = [...prev, newRecord]
         // Keep last 30 records (1 minute of data)
         if (updated.length > 30) updated.shift()
-        
+
         // Update max concurrent signals
         const max = Math.max(...updated.map((r) => r.activeSignals))
         setMaxConcurrentSignals(max)
-        
+
         // Save to localStorage
         localStorage.setItem("duc_signal_history", JSON.stringify(updated))
-        
+
         return updated
       })
     }, 2000)
@@ -142,7 +142,7 @@ export default function DucsDashboard() {
     setIsLoggedIn(false)
     setCurrentUser("")
     setUserRole("")
-    
+
     // Clear signal tracking
     if (signalIntervalRef.current) {
       clearInterval(signalIntervalRef.current)
@@ -240,8 +240,8 @@ export default function DucsDashboard() {
   }, [timeRange])
 
   // Get current active signals
-  const currentActiveSignals = signalHistory.length > 0 
-    ? signalHistory[signalHistory.length - 1].activeSignals 
+  const currentActiveSignals = signalHistory.length > 0
+    ? signalHistory[signalHistory.length - 1].activeSignals
     : 0
 
   // Login page
@@ -250,9 +250,9 @@ export default function DucsDashboard() {
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-lg">
           <div className="mb-6 flex flex-col items-center gap-3">
-            <img 
-              src="/ducs-logo.jpg" 
-              alt="Duc's Dashboard Logo" 
+            <img
+              src="/ducs-logo.jpg"
+              alt="Duc's Dashboard Logo"
               className="h-16 w-16 rounded-lg object-cover"
             />
             <h1 className="text-2xl font-bold text-cyan-400">Duc&apos;s Dashboard</h1>
@@ -309,9 +309,9 @@ export default function DucsDashboard() {
       {/* Header */}
       <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6 gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <img 
-            src="/ducs-logo.jpg" 
-            alt="Logo" 
+          <img
+            src="/ducs-logo.jpg"
+            alt="Logo"
             className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
           />
           <div className="flex flex-col gap-0 min-w-0">
