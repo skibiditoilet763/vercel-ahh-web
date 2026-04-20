@@ -5,7 +5,7 @@ import { CalendarIcon, Clock, Search, ChevronDown, Copy, Clipboard, GitCompare, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -540,8 +540,8 @@ export function TimeRangePicker({
         <div className="flex h-[460px]">
           {/* Left Panel - Absolute Time Range */}
           <div className="w-[300px] border-r border-border flex flex-col overflow-hidden">
-            <ScrollArea className="flex-1">
-              <div className="p-4 space-y-3">
+            <ScrollArea className="flex-1 pr-2">
+              <div className="p-4 pr-2 space-y-3">
                 <h3 className="text-sm font-medium text-foreground">Absolute time range</h3>
 
                 {/* From Input with Calendar */}
@@ -740,6 +740,7 @@ export function TimeRangePicker({
                   </Select>
                 </div>
               </div>
+              <ScrollBar className="w-2 bg-muted/30" />
             </ScrollArea>
           </div>
 
@@ -760,8 +761,8 @@ export function TimeRangePicker({
             </div>
 
             {/* Quick Ranges List */}
-            <ScrollArea className="flex-1">
-              <div className="p-1">
+            <ScrollArea className="flex-1 pr-3">
+              <div className="p-1 pr-2">
                 {filteredRanges.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No matching ranges found
@@ -778,6 +779,7 @@ export function TimeRangePicker({
                   ))
                 )}
               </div>
+              <ScrollBar className="w-2 bg-muted/30" />
             </ScrollArea>
           </div>
         </div>
