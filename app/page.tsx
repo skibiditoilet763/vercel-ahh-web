@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { RefreshCw, ZoomIn, ZoomOut, LogOut, User, ExternalLink, TrendingUp } from "lucide-react"
+import { MotionIQCommissioning } from "@/components/motioniq-commissioning"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -357,6 +358,9 @@ export default function DucsDashboard() {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
+
+          {/* MotionIQ Commissioning */}
+          <MotionIQCommissioning />
 
           {/* Admin: Open Grafana */}
           {userRole === "admin" && (
