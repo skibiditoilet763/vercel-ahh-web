@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { RefreshCw, ZoomIn, ZoomOut, LogOut, User, ExternalLink, TrendingUp } from "lucide-react"
-import { MotionIQCommissioning } from "@/components/motioniq-commissioning"
+import { RefreshCw, ZoomIn, ZoomOut, LogOut, User, ExternalLink, TrendingUp, Settings2 } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -360,7 +360,12 @@ export default function DucsDashboard() {
           </Button>
 
           {/* MotionIQ Commissioning */}
-          <MotionIQCommissioning />
+          <Link href="/motioniq">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Settings2 className="h-4 w-4" />
+              MotionIQ Commissioning
+            </Button>
+          </Link>
 
           {/* Admin: Open Grafana */}
           {userRole === "admin" && (

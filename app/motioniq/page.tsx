@@ -1,13 +1,9 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Settings2 } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 // BLE Constants
 const SVC = "4d6f7469-6f6e-4951-5631-000000000001"
@@ -49,28 +45,9 @@ interface LogEntry {
   type: string
 }
 
-export function MotionIQCommissioning() {
-  const [open, setOpen] = useState(false)
+export default function MotionIQPage() {
+  const router = useRouter()
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings2 className="h-4 w-4" />
-          MotionIQ Commissioning
-        </Button>
-      </DialogTrigger>
-      <DialogContent
-        className="max-w-[95vw] w-[1200px] h-[90vh] p-0 overflow-hidden"
-        showCloseButton={false}
-      >
-        <MotionIQPanel onClose={() => setOpen(false)} />
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function MotionIQPanel({ onClose }: { onClose: () => void }) {
   // State
   const [connected, setConnected] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"off" | "blink" | "on">("off")
@@ -956,16 +933,28 @@ function MotionIQPanel({ onClose }: { onClose: () => void }) {
   )
 
   return (
-    <div className="flex flex-col h-full bg-[#08090c] text-[#c8d4e0] font-sans">
+    <div className="flex flex-col h-screen bg-[#08090c] text-[#c8d4e0] font-sans">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 bg-[#0d1117] border-b border-[#1c2530]">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 border border-cyan-400 rounded flex items-center justify-center text-cyan-400 text-xs font-mono">
-            VS1
-          </div>
-          <div>
-            <div className="font-bold text-sm tracking-wider">MOTIONIQ</div>
-            <div className="text-[9px] text-gray-500 font-mono tracking-wider">COMMISSIONING · NCS 3.1.1</div>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/")}
+            className="gap-2 text-gray-400 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div className="w-px h-6 bg-[#1c2530]" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 border border-cyan-400 rounded flex items-center justify-center text-cyan-400 text-xs font-mono">
+              VS1
+            </div>
+            <div>
+              <div className="font-bold text-sm tracking-wider">MOTIONIQ</div>
+              <div className="text-[9px] text-gray-500 font-mono tracking-wider">COMMISSIONING</div>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -977,14 +966,6 @@ function MotionIQPanel({ onClose }: { onClose: () => void }) {
             }`} />
             <span>{connectionStatus === "on" ? "CONNECTED" : connectionStatus === "blink" ? "SCANNING..." : "DISCONNECTED"}</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-800 rounded transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
       </header>
 
@@ -1109,21 +1090,40 @@ function MotionIQPanel({ onClose }: { onClose: () => void }) {
               </div>
 
               {/* Magnetic bars */}
-              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3">
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3 mb-2">
                 <div className="text-[8px] font-mono text-gray-500 tracking-widest mb-2">MAGNETIC FIELD — TMAG5170A01</div>
                 {[
                   { axis: "X", color: "#b388ff", value: dashData.mxT },
                   { axis: "Y", color: "#ff80ab", value: dashData.myT },
                   { axis: "Z", color: "#ffd740", value: dashData.mzT },
-                ].map((v, i) => (
+                ].map((m, i) => (
                   <div key={i} className="grid grid-cols-[28px_1fr_75px] items-center gap-2 my-1">
-                    <div className="font-mono text-xs font-bold" style={{ color: v.color }}>{v.axis}</div>
+                    <div className="font-mono text-xs font-bold" style={{ color: m.color }}>{m.axis}</div>
                     <div className="bg-[#0a0f15] h-1.5 rounded overflow-hidden">
-                      <div className="h-full rounded transition-all" style={{ background: v.color, width: `${Math.max(0, Math.min(100, 50 + v.value / 25 * 50))}%` }} />
+                      <div className="h-full rounded transition-all" style={{ background: m.color, width: `${Math.min(100, Math.abs(m.value) / 500 * 100)}%` }} />
                     </div>
-                    <div className="font-mono text-xs text-right" style={{ color: v.color }}>{f1(v.value)} uT</div>
+                    <div className="font-mono text-xs text-right" style={{ color: m.color }}>{f1(m.value)} µT</div>
                   </div>
                 ))}
+              </div>
+
+              {/* Trend chart */}
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3 mb-2">
+                <div className="flex items-center justify-between text-[8px] font-mono text-gray-500 tracking-widest mb-2">
+                  <span>RMS TREND</span>
+                  <span>
+                    <span className="text-cyan-400 mr-2">X max {trendMax.x}</span>
+                    <span className="text-orange-400 mr-2">Y max {trendMax.y}</span>
+                    <span className="text-green-400">Z max {trendMax.z}</span>
+                  </span>
+                </div>
+                <canvas ref={trendCanvasRef} className="w-full" />
+              </div>
+
+              {/* Mag trend chart */}
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3">
+                <div className="text-[8px] font-mono text-gray-500 tracking-widest mb-2">MAGNETIC TREND</div>
+                <canvas ref={magCanvasRef} className="w-full" />
               </div>
             </div>
           )}
@@ -1131,231 +1131,225 @@ function MotionIQPanel({ onClose }: { onClose: () => void }) {
           {/* Waveform Page */}
           {activePage === "wave" && (
             <div>
-              <div className="text-[9px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                WAVEFORM & TRENDING
+              <div className="flex items-center justify-between text-[9px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
+                <span>WAVEFORM CAPTURE & FFT</span>
+                <span>{waveStatus}</span>
               </div>
 
-              {/* RMS Trend */}
-              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3 mb-2">
-                <div className="flex items-center justify-between text-[8px] font-mono text-gray-500 mb-2">
-                  <span className="tracking-widest">RMS TREND — VIBRATION (m/s²)</span>
-                  <div className="flex gap-2 text-[9px]">
-                    <span><span className="inline-block w-2 h-0.5 bg-[#00d4ff] mr-1 align-middle" />X</span>
-                    <span><span className="inline-block w-2 h-0.5 bg-[#ff6b35] mr-1 align-middle" />Y</span>
-                    <span><span className="inline-block w-2 h-0.5 bg-[#39ff14] mr-1 align-middle" />Z</span>
-                  </div>
-                </div>
-                <canvas ref={trendCanvasRef} className="w-full cursor-crosshair" height={110} />
-                <div className="flex gap-4 mt-2 text-[10px] font-mono text-gray-500">
-                  <span>MAX-X <span className="text-cyan-400">{trendMax.x}</span></span>
-                  <span>MAX-Y <span className="text-cyan-400">{trendMax.y}</span></span>
-                  <span>MAX-Z <span className="text-cyan-400">{trendMax.z}</span></span>
-                </div>
-              </div>
-
-              {/* Magnetic Trend */}
-              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3 mb-2">
-                <div className="flex items-center justify-between text-[8px] font-mono text-gray-500 mb-2">
-                  <span className="tracking-widest">RMS TREND — MAGNETIC (uT)</span>
-                  <div className="flex gap-2 text-[9px]">
-                    <span><span className="inline-block w-2 h-0.5 bg-[#b388ff] mr-1 align-middle" />X</span>
-                    <span><span className="inline-block w-2 h-0.5 bg-[#ff80ab] mr-1 align-middle" />Y</span>
-                    <span><span className="inline-block w-2 h-0.5 bg-[#ffd740] mr-1 align-middle" />Z</span>
-                  </div>
-                </div>
-                <canvas ref={magCanvasRef} className="w-full cursor-crosshair" height={90} />
-              </div>
-
-              {/* Waveform Capture */}
-              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3 mb-2">
-                <div className="text-[8px] font-mono text-gray-500 tracking-widest mb-2">
-                  WAVEFORM CAPTURE — AXIS {["X", "Y", "Z"][waveAxis]}
-                </div>
-                <div className="flex items-center gap-3 mb-3 flex-wrap">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[9px] font-mono text-gray-500 mr-1">AXIS</span>
-                    {["X", "Y", "Z"].map((a, i) => (
-                      <button
-                        key={a}
-                        className={`px-2 py-1 text-[10px] font-mono border rounded transition-colors ${
-                          waveAxis === i
-                            ? "text-cyan-400 border-cyan-400 bg-cyan-400/10"
-                            : "text-gray-500 border-[#1c2530] hover:border-gray-500"
-                        }`}
-                        onClick={() => setWaveAxis(i)}
-                      >
-                        {a}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    className={`px-4 py-1 text-[10px] font-mono font-bold rounded transition-colors ${
-                      waveCapturing
-                        ? "bg-red-500 text-white animate-pulse"
-                        : "bg-cyan-400 text-black hover:bg-cyan-300"
-                    }`}
-                    onClick={capWave}
-                  >
-                    {waveCapturing ? "CAPTURING..." : "CAPTURE"}
-                  </button>
-                  {waveCapturing && (
+              {/* Controls */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-mono text-gray-500">AXIS:</span>
+                  {["X", "Y", "Z"].map((a, i) => (
                     <button
-                      className="px-4 py-1 text-[10px] font-mono text-red-400 border border-red-400 rounded hover:bg-red-400/10"
-                      onClick={stopWave}
+                      key={a}
+                      className={`px-3 py-1 text-xs font-mono rounded transition-colors ${waveAxis === i ? "bg-cyan-400 text-black" : "bg-[#1c2530] text-gray-400 hover:bg-[#2a3545]"}`}
+                      onClick={() => setWaveAxis(i)}
                     >
-                      STOP
+                      {a}
                     </button>
-                  )}
-                  <span className="text-[9px] font-mono text-gray-500">{waveStatus}</span>
+                  ))}
                 </div>
-                <canvas ref={waveCanvasRef} className="w-full cursor-crosshair" height={150} />
-                <div className="flex gap-4 mt-2 text-[10px] font-mono text-gray-500">
-                  <span>SAMPLES <span className="text-cyan-400">{waveStats.samples}</span></span>
-                  <span>MIN <span className="text-cyan-400">{waveStats.min}</span></span>
-                  <span>MAX <span className="text-cyan-400">{waveStats.max}</span></span>
-                  <span>RMS <span className="text-cyan-400">{waveStats.rms}</span></span>
-                </div>
+                <button
+                  className="px-4 py-1.5 text-xs font-mono bg-cyan-400 text-black rounded hover:bg-cyan-300 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                  onClick={capWave}
+                  disabled={waveCapturing || !connected}
+                >
+                  {waveCapturing ? "CAPTURING..." : "CAPTURE"}
+                </button>
+                <button
+                  className="px-4 py-1.5 text-xs font-mono bg-red-500 text-white rounded hover:bg-red-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                  onClick={stopWave}
+                  disabled={!waveCapturing}
+                >
+                  STOP
+                </button>
               </div>
 
-              {/* FFT */}
+              {/* Waveform chart */}
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3 mb-3">
+                <div className="flex items-center justify-between text-[8px] font-mono text-gray-500 tracking-widest mb-2">
+                  <span>TIME DOMAIN</span>
+                  <span>{waveStats.samples} samples · min {waveStats.min} · max {waveStats.max} · rms {waveStats.rms}</span>
+                </div>
+                <canvas ref={waveCanvasRef} className="w-full" />
+              </div>
+
+              {/* FFT chart */}
               <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3">
-                <div className="text-[8px] font-mono text-gray-500 tracking-widest mb-2">
-                  FFT SPECTRUM — 26.7 kHz / 2 = 13.35 kHz SPAN
+                <div className="flex items-center justify-between text-[8px] font-mono text-gray-500 tracking-widest mb-2">
+                  <span>FREQUENCY SPECTRUM (FFT)</span>
+                  <span>Peak: {fftStats.peak} @ {fftStats.amp}</span>
                 </div>
-                <canvas ref={fftCanvasRef} className="w-full cursor-crosshair" height={140} />
-                <div className="flex gap-4 mt-2 text-[10px] font-mono text-gray-500">
-                  <span>PEAK FREQ <span className="text-cyan-400">{fftStats.peak}</span></span>
-                  <span>AMPLITUDE <span className="text-cyan-400">{fftStats.amp}</span></span>
-                </div>
+                <canvas ref={fftCanvasRef} className="w-full" />
               </div>
             </div>
           )}
 
-          {/* Config Page */}
+          {/* Configuration Page */}
           {activePage === "config" && (
-            <div>
-              <div className="text-[9px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                SENSOR CONFIGURATION
+            <div className="grid grid-cols-2 gap-4">
+              {/* Accelerometer */}
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-4">
+                <div className="text-[9px] font-mono text-gray-500 tracking-widest mb-3">ACCELEROMETER — IIS3DWB</div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 block mb-1">Full-Scale</label>
+                    <select
+                      className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                      value={configFs}
+                      onChange={(e) => setConfigFs(e.target.value)}
+                    >
+                      {FS_NAMES.map((n, i) => <option key={i} value={i}>{n}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 block mb-1">FIFO Watermark</label>
+                    <input
+                      type="number"
+                      className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                      value={configFwm}
+                      onChange={(e) => setConfigFwm(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[9px] font-mono text-gray-500 block mb-1">LPF2</label>
+                      <select
+                        className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                        value={configLpf}
+                        onChange={(e) => setConfigLpf(e.target.value)}
+                      >
+                        <option value="0">Off</option>
+                        <option value="1">ODR/4</option>
+                        <option value="2">ODR/10</option>
+                        <option value="3">ODR/20</option>
+                        <option value="4">ODR/45</option>
+                        <option value="5">ODR/100</option>
+                        <option value="6">ODR/200</option>
+                        <option value="7">ODR/400</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-mono text-gray-500 block mb-1">HPF</label>
+                      <select
+                        className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                        value={configHpf}
+                        onChange={(e) => setConfigHpf(e.target.value)}
+                      >
+                        <option value="0">Off</option>
+                        <option value="1">ODR/800</option>
+                        <option value="2">ODR/100</option>
+                        <option value="3">ODR/9</option>
+                        <option value="4">ODR/400</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button
+                    className="w-full bg-cyan-400 text-black py-2 text-xs font-mono rounded hover:bg-cyan-300"
+                    onClick={applyAccel}
+                  >
+                    APPLY
+                  </button>
+                  {fbAcc && <div className="text-[9px] font-mono text-green-400">{fbAcc}</div>}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {/* Accelerometer */}
-                <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3">
-                  <div className="text-[8px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                    IIS3DWB — ACCELEROMETER
+              {/* Hall Effect */}
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-4">
+                <div className="text-[9px] font-mono text-gray-500 tracking-widest mb-3">HALL EFFECT — TMAG5170A01</div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 block mb-1">Averaging</label>
+                    <select
+                      className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                      value={configAvg}
+                      onChange={(e) => setConfigAvg(e.target.value)}
+                    >
+                      <option value="0">1x</option>
+                      <option value="1">2x</option>
+                      <option value="2">4x</option>
+                      <option value="3">8x</option>
+                      <option value="4">16x</option>
+                      <option value="5">32x</option>
+                    </select>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">Full Scale</span>
-                      <select value={configFs} onChange={e => setConfigFs(e.target.value)} className="bg-[#0a0f15] border border-[#1c2530] text-white text-[10px] font-mono p-1 rounded">
-                        <option value="0">+/-2 g</option>
-                        <option value="1">+/-4 g</option>
-                        <option value="2">+/-8 g</option>
-                        <option value="3">+/-16 g</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">FIFO Watermark</span>
-                      <input type="number" value={configFwm} onChange={e => setConfigFwm(e.target.value)} min="1" max="127" className="bg-[#0a0f15] border border-[#1c2530] text-white text-[11px] font-mono p-1 rounded w-20 text-right" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">LPF2 Output</span>
-                      <select value={configLpf} onChange={e => setConfigLpf(e.target.value)} className="bg-[#0a0f15] border border-[#1c2530] text-white text-[10px] font-mono p-1 rounded">
-                        <option value="0">Disabled</option>
-                        <option value="1">ODR/4 (6.7 kHz)</option>
-                        <option value="2">ODR/10 (2.67 kHz)</option>
-                        <option value="3">ODR/20 (1.3 kHz)</option>
-                        <option value="4">ODR/45 (593 Hz)</option>
-                        <option value="5">ODR/100 (267 Hz)</option>
-                        <option value="6">ODR/200 (133 Hz)</option>
-                        <option value="7">ODR/400 (67 Hz)</option>
-                        <option value="8">ODR/800 (33 Hz)</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">HP Filter</span>
-                      <select value={configHpf} onChange={e => setConfigHpf(e.target.value)} className="bg-[#0a0f15] border border-[#1c2530] text-white text-[10px] font-mono p-1 rounded">
-                        <option value="0">Disabled</option>
-                        <option value="1">Enabled</option>
-                      </select>
-                    </div>
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 block mb-1">Range</label>
+                    <select
+                      className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                      value={configRng}
+                      onChange={(e) => setConfigRng(e.target.value)}
+                    >
+                      <option value="0">+/-50mT</option>
+                      <option value="1">+/-25mT</option>
+                      <option value="2">+/-100mT</option>
+                    </select>
                   </div>
-                  <button onClick={applyAccel} className="mt-3 bg-cyan-400 text-black px-4 py-1.5 text-[10px] font-mono font-bold tracking-wider rounded hover:bg-cyan-300">
-                    APPLY ACCEL CONFIG
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 block mb-1">Channels</label>
+                    <select
+                      className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                      value={configCh}
+                      onChange={(e) => setConfigCh(e.target.value)}
+                    >
+                      <option value="7">XYZ</option>
+                      <option value="4">X only</option>
+                      <option value="5">Y only</option>
+                      <option value="6">Z only</option>
+                    </select>
+                  </div>
+                  <button
+                    className="w-full bg-cyan-400 text-black py-2 text-xs font-mono rounded hover:bg-cyan-300"
+                    onClick={applyTmag}
+                  >
+                    APPLY
                   </button>
-                  {fbAcc && <div className="text-[9px] font-mono text-green-400 mt-2">{fbAcc}</div>}
+                  {fbTmag && <div className="text-[9px] font-mono text-green-400">{fbTmag}</div>}
                 </div>
+              </div>
 
-                {/* TMAG */}
-                <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3">
-                  <div className="text-[8px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                    TMAG5170A01 — HALL EFFECT
+              {/* BLE Reporting */}
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-4">
+                <div className="text-[9px] font-mono text-gray-500 tracking-widest mb-3">BLE REPORTING</div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 block mb-1">Period (ms)</label>
+                    <input
+                      type="number"
+                      className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                      value={configPer}
+                      onChange={(e) => setConfigPer(e.target.value)}
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">Conv. Averaging</span>
-                      <select value={configAvg} onChange={e => setConfigAvg(e.target.value)} className="bg-[#0a0f15] border border-[#1c2530] text-white text-[10px] font-mono p-1 rounded">
-                        <option value="0">1x (fastest)</option>
-                        <option value="1">2x</option>
-                        <option value="2">4x</option>
-                        <option value="3">8x (default)</option>
-                        <option value="4">16x</option>
-                        <option value="5">32x (low noise)</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">Mag Range</span>
-                      <select value={configRng} onChange={e => setConfigRng(e.target.value)} className="bg-[#0a0f15] border border-[#1c2530] text-white text-[10px] font-mono p-1 rounded">
-                        <option value="0">+/-50 mT</option>
-                        <option value="1">+/-25 mT</option>
-                        <option value="2">+/-100 mT</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">Channels</span>
-                      <select value={configCh} onChange={e => setConfigCh(e.target.value)} className="bg-[#0a0f15] border border-[#1c2530] text-white text-[10px] font-mono p-1 rounded">
-                        <option value="7">X+Y+Z</option>
-                        <option value="1">X only</option>
-                        <option value="2">Y only</option>
-                        <option value="4">Z only</option>
-                        <option value="3">X+Y</option>
-                        <option value="5">X+Z</option>
-                        <option value="6">Y+Z</option>
-                      </select>
-                    </div>
-                  </div>
-                  <button onClick={applyTmag} className="mt-3 bg-cyan-400 text-black px-4 py-1.5 text-[10px] font-mono font-bold tracking-wider rounded hover:bg-cyan-300">
-                    APPLY TMAG CONFIG
+                  <button
+                    className="w-full bg-cyan-400 text-black py-2 text-xs font-mono rounded hover:bg-cyan-300"
+                    onClick={applyBle}
+                  >
+                    SET PERIOD
                   </button>
-                  {fbTmag && <div className="text-[9px] font-mono text-green-400 mt-2">{fbTmag}</div>}
+                  {fbBle && <div className="text-[9px] font-mono text-green-400">{fbBle}</div>}
                 </div>
+              </div>
 
-                {/* BLE & Reporting */}
-                <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3">
-                  <div className="text-[8px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                    BLE & REPORTING
-                  </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-mono text-gray-500">Report Period (ms)</span>
-                    <input type="number" value={configPer} onChange={e => setConfigPer(e.target.value)} min="100" max="60000" step="100" className="bg-[#0a0f15] border border-[#1c2530] text-white text-[11px] font-mono p-1 rounded w-24 text-right" />
-                  </div>
-                  <button onClick={applyBle} className="bg-cyan-400 text-black px-4 py-1.5 text-[10px] font-mono font-bold tracking-wider rounded hover:bg-cyan-300">
-                    APPLY PERIOD
-                  </button>
-                  {fbBle && <div className="text-[9px] font-mono text-green-400 mt-2">{fbBle}</div>}
-
-                  <button onClick={doReboot} className="mt-4 border border-red-400 text-red-400 px-4 py-1.5 text-[10px] font-mono font-bold tracking-wider rounded hover:bg-red-400/10">
+              {/* Device */}
+              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-4">
+                <div className="text-[9px] font-mono text-gray-500 tracking-widest mb-3">DEVICE</div>
+                <div className="space-y-3">
+                  <button
+                    className="w-full bg-red-500 text-white py-2 text-xs font-mono rounded hover:bg-red-400"
+                    onClick={doReboot}
+                  >
                     REBOOT DEVICE
                   </button>
-                  {fbDev && <div className="text-[9px] font-mono text-yellow-400 mt-2">{fbDev}</div>}
-                </div>
-
-                {/* Raw Packet */}
-                <div className="bg-[#0d1117] border border-[#1c2530] rounded p-3">
-                  <div className="text-[8px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                    LAST PACKET (56 BYTES HEX)
+                  {fbDev && <div className="text-[9px] font-mono text-yellow-400">{fbDev}</div>}
+                  <div className="mt-3">
+                    <div className="text-[8px] font-mono text-gray-500 mb-1">RAW PACKET</div>
+                    <div
+                      className="bg-[#111820] border border-[#1c2530] rounded p-2 text-[8px] font-mono text-gray-400 break-all max-h-20 overflow-y-auto"
+                      dangerouslySetInnerHTML={{ __html: rawPkt }}
+                    />
                   </div>
-                  <div className="text-[9px] font-mono text-gray-500 break-all leading-relaxed" dangerouslySetInnerHTML={{ __html: rawPkt }} />
                 </div>
               </div>
             </div>
@@ -1363,64 +1357,43 @@ function MotionIQPanel({ onClose }: { onClose: () => void }) {
 
           {/* Calibration Page */}
           {activePage === "cal" && (
-            <div>
-              <div className="text-[9px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                CALIBRATION
-              </div>
-
-              <div className="bg-[#0d1117] border border-[#1c2530] rounded p-4 mb-3">
-                <div className="text-[8px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                  ACCEL ZERO OFFSET (IIS3DWB)
-                </div>
-                <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-                  Place sensor on flat surface. Enter LSB offsets or click Auto-Capture.
-                </p>
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  {[
-                    { label: "X OFFSET (LSB)", value: calX, setter: setCalX },
-                    { label: "Y OFFSET (LSB)", value: calY, setter: setCalY },
-                    { label: "Z OFFSET (LSB)", value: calZ, setter: setCalZ },
-                  ].map((o, i) => (
-                    <div key={i}>
-                      <label className="block text-[8px] font-mono text-gray-500 mb-1">{o.label}</label>
-                      <input
-                        type="number"
-                        value={o.value}
-                        onChange={e => o.setter(e.target.value)}
-                        min="-128"
-                        max="127"
-                        className="w-full bg-[#0a0f15] border border-[#1c2530] text-white text-[11px] font-mono p-2 rounded"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={sendOffsets} className="bg-cyan-400 text-black px-4 py-1.5 text-[10px] font-mono font-bold tracking-wider rounded hover:bg-cyan-300">
-                    SEND OFFSETS
-                  </button>
-                  <button onClick={autoCal} className="bg-orange-500 text-black px-4 py-1.5 text-[10px] font-mono font-bold tracking-wider rounded hover:bg-orange-400">
-                    AUTO CAPTURE ZERO
-                  </button>
-                </div>
-                {fbCal && <div className="text-[9px] font-mono text-green-400 mt-2">{fbCal}</div>}
-              </div>
-
+            <div className="max-w-md">
               <div className="bg-[#0d1117] border border-[#1c2530] rounded p-4">
-                <div className="text-[8px] font-mono text-gray-500 tracking-widest border-b border-[#1c2530] pb-2 mb-3">
-                  GRAVITY CHECK — Z = 9.81 m/s²
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "X RMS", value: calRX, color: "#00d4ff" },
-                    { label: "Y RMS", value: calRY, color: "#ff6b35" },
-                    { label: "Z RMS", value: calRZ, color: "#39ff14" },
-                  ].map((c, i) => (
-                    <div key={i} className="bg-[#0d1117] border border-[#1c2530] rounded p-3 text-center" style={{ borderTopColor: c.color, borderTopWidth: 2 }}>
-                      <div className="text-[8px] font-mono text-gray-500 tracking-wider">{c.label}</div>
-                      <div className="text-lg font-mono mt-1" style={{ color: c.color }}>{c.value}</div>
-                      <div className="text-[9px] font-mono text-gray-500">m/s²</div>
-                    </div>
-                  ))}
+                <div className="text-[9px] font-mono text-gray-500 tracking-widest mb-3">OFFSET CALIBRATION</div>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "X", value: calX, setter: setCalX, live: calRX },
+                      { label: "Y", value: calY, setter: setCalY, live: calRY },
+                      { label: "Z", value: calZ, setter: setCalZ, live: calRZ },
+                    ].map((c) => (
+                      <div key={c.label}>
+                        <label className="text-[9px] font-mono text-gray-500 block mb-1">{c.label} offset</label>
+                        <input
+                          type="number"
+                          className="w-full bg-[#111820] border border-[#1c2530] rounded px-2 py-1.5 text-xs font-mono text-cyan-400"
+                          value={c.value}
+                          onChange={(e) => c.setter(e.target.value)}
+                        />
+                        <div className="text-[8px] font-mono text-gray-500 mt-1">Live: {c.live}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      className="flex-1 bg-cyan-400 text-black py-2 text-xs font-mono rounded hover:bg-cyan-300"
+                      onClick={sendOffsets}
+                    >
+                      SEND OFFSETS
+                    </button>
+                    <button
+                      className="flex-1 bg-orange-500 text-black py-2 text-xs font-mono rounded hover:bg-orange-400"
+                      onClick={autoCal}
+                    >
+                      AUTO-ZERO
+                    </button>
+                  </div>
+                  {fbCal && <div className="text-[9px] font-mono text-green-400">{fbCal}</div>}
                 </div>
               </div>
             </div>
