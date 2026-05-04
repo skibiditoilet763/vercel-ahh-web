@@ -6,27 +6,37 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { TimeRangePicker } from "@/components/time-range-picker"
-import { MetricPanel } from "@/components/metric-panel"
-
-// Base URL for Grafana panels
-const BASE_URL = "https://6387-2402-800-61ca-7aea-d56-cd0c-31c8-2816.ngrok-free.app/d-solo/ad498n8/testing"
+// Grafana dashboard URLs
+const GRAFANA_PANELS = [
+  {
+    id: "panel-5",
+    title: "Signal Stream 1",
+    src: "http://localhost:3000/d-solo/ad498n8/testing?orgId=1&from=1777920202740&to=1777920232740&timezone=browser&refresh=5s&panelId=panel-5&__feature.dashboardSceneSolo=true",
+  },
+  {
+    id: "panel-4",
+    title: "Signal Stream 2",
+    src: "http://localhost:3000/d-solo/ad498n8/testing?orgId=1&from=1777920208178&to=1777920238178&timezone=browser&refresh=5s&panelId=panel-4&__feature.dashboardSceneSolo=true",
+  },
+  {
+    id: "panel-3",
+    title: "Signal Stream 3",
+    src: "http://localhost:3000/d-solo/ad498n8/testing?orgId=1&from=1777920217740&to=1777920247740&timezone=browser&refresh=5s&panelId=panel-3&__feature.dashboardSceneSolo=true",
+  },
+  {
+    id: "panel-1",
+    title: "Signal Stream 4",
+    src: "http://localhost:3000/d-solo/ad498n8/testing?orgId=1&from=1777920222729&to=1777920252729&timezone=browser&refresh=5s&panelId=panel-1&__feature.dashboardSceneSolo=true",
+  },
+]
 
 // Grafana main page URL (admin only)
-const GRAFANA_MAIN_URL = "https://6387-2402-800-61ca-7aea-d56-cd0c-31c8-2816.ngrok-free.app"
+const GRAFANA_MAIN_URL = "http://localhost:3000"
 
 // Test credentials (no database yet)
 const TEST_USERS = [
   { username: "admin", password: "admin123", role: "admin" },
   { username: "user", password: "user123", role: "customer" },
-]
-
-// Panel configurations with Grafana queries
-const PANELS = [
-  { id: "panel-1", title: "Signal Stream 1", query: "up" },
-  { id: "panel-4", title: "Signal Stream 2", query: "process_resident_memory_bytes" },
-  { id: "panel-3", title: "Signal Stream 3", query: "rate(requests_total[5m])" },
-  { id: "panel-5", title: "Signal Stream 4", query: "node_cpu_seconds_total" },
 ]
 
 
@@ -36,11 +46,6 @@ interface SignalRecord {
   activeSignals: number
 }
 
-// Cubic easing function for smooth animations
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-}
-
 export default function DucsDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState("")
@@ -48,12 +53,7 @@ export default function DucsDashboard() {
   const [currentUser, setCurrentUser] = useState("")
   const [userRole, setUserRole] = useState("")
   const [error, setError] = useState("")
-
-  const [timeRange, setTimeRange] = useState({
-    from: Date.now() - 60 * 60 * 1000,
-    to: Date.now(),
-  })
-  const animationRef = useRef<number | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Signal history tracking (admin only)
   const [signalHistory, setSignalHistory] = useState<SignalRecord[]>([])
@@ -147,73 +147,20 @@ export default function DucsDashboard() {
   }
 
   // Animate time range changes
-  const animateToRange = useCallback((targetFrom: number, targetTo: number) => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-    }
-
-    const startFrom = timeRange.from
-    const startTo = timeRange.to
-    const startTime = performance.now()
-    const duration = 400
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = easeInOutCubic(progress)
-
-      const newFrom = startFrom + (targetFrom - startFrom) * eased
-      const newTo = startTo + (targetTo - startTo) * eased
-
-      setTimeRange({ from: newFrom, to: newTo })
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate)
-      }
-    }
-
-    animationRef.current = requestAnimationFrame(animate)
-  }, [timeRange])
-
-  // Cleanup animation on unmount
-  useEffect(() => {
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-      if (signalIntervalRef.current) {
-        clearInterval(signalIntervalRef.current)
-      }
-    }
+  // Refresh all panels
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((prev) => prev + 1)
   }, [])
 
-
-
-  // Refresh all panels (no longer needed for iframes)
-  const handleRefresh = useCallback(() => {
-    const range = timeRange.to - timeRange.from
-    const now = Date.now()
-    setTimeRange({ from: now - range, to: now })
-  }, [timeRange])
-
-  // Zoom in (reduce time range by 50%)
+  // Zoom in - not used with iframes
   const handleZoomIn = useCallback(() => {
-    const center = (timeRange.from + timeRange.to) / 2
-    const halfRange = (timeRange.to - timeRange.from) / 4
-    animateToRange(center - halfRange, center + halfRange)
-  }, [timeRange, animateToRange])
+    handleRefresh()
+  }, [handleRefresh])
 
-  // Zoom out (increase time range by 100%)
+  // Zoom out - not used with iframes
   const handleZoomOut = useCallback(() => {
-    const center = (timeRange.from + timeRange.to) / 2
-    const halfRange = (timeRange.to - timeRange.from)
-    animateToRange(center - halfRange, center + halfRange)
-  }, [timeRange, animateToRange])
-
-  // Handle time range change from picker
-  const handleTimeRangeChange = useCallback((newRange: { from: number; to: number }) => {
-    animateToRange(newRange.from, newRange.to)
-  }, [animateToRange])
+    handleRefresh()
+  }, [handleRefresh])
 
   // Get current active signals
   const currentActiveSignals = signalHistory.length > 0
@@ -314,12 +261,6 @@ export default function DucsDashboard() {
 
         {/* Controls */}
         <div className="flex items-center gap-2 ml-auto">
-          {/* Time Range Picker */}
-          <TimeRangePicker
-            timeRange={timeRange}
-            onTimeRangeChange={handleTimeRangeChange}
-          />
-
           {/* Zoom Controls */}
           <div className="flex items-center gap-1">
             <Button
@@ -396,15 +337,23 @@ export default function DucsDashboard() {
       {/* Dashboard Grid */}
       <main className="flex-1 p-6 overflow-auto">
         <div className="grid h-full gap-4 grid-cols-1 md:grid-cols-2 auto-rows-max">
-          {PANELS.map((panel) => (
-            <MetricPanel
+          {GRAFANA_PANELS.map((panel) => (
+            <div
               key={panel.id}
-              panelId={panel.id}
-              title={panel.title}
-              query={panel.query}
-              timeRange={timeRange}
-              pollInterval={5000}
-            />
+              className="flex flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-cyan-500/50 transition-colors"
+            >
+              <div className="flex items-center border-b border-border px-4 py-3 bg-muted/20">
+                <h2 className="text-sm font-semibold text-foreground">{panel.title}</h2>
+              </div>
+              <div className="relative flex-1 min-h-[250px]">
+                <iframe
+                  src={panel.src}
+                  className="absolute inset-0 h-full w-full border-0"
+                  title={panel.title}
+                  allow="fullscreen"
+                />
+              </div>
+            </div>
           ))}
         </div>
       </main>
