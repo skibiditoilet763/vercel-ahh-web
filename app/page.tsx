@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TimeRangePicker } from "@/components/time-range-picker"
-import { MetricPanel } from "@/components/metric-panel"
 
 // Base URL for Grafana panels
 const BASE_URL = "https://821d-116-96-46-5.ngrok-free.app/d-solo/ad498n8/testing"
@@ -397,14 +396,23 @@ export default function DucsDashboard() {
       <main className="flex-1 p-6 overflow-auto">
         <div className="grid h-full gap-4 grid-cols-1 md:grid-cols-2 auto-rows-max">
           {PANELS.map((panel) => (
-            <MetricPanel
+            <div
               key={panel.id}
-              panelId={panel.id}
-              title={panel.title}
-              query={panel.query}
-              timeRange={timeRange}
-              pollInterval={5000}
-            />
+              className="flex flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-cyan-500/50 transition-colors"
+            >
+              <div className="flex items-center border-b border-border px-4 py-3 bg-muted/20">
+                <h2 className="text-sm font-semibold text-foreground">{panel.title}</h2>
+              </div>
+              <div className="relative flex-1 min-h-[250px]">
+                <iframe
+                  key={`${panel.id}-${refreshKey}`}
+                  src={buildPanelUrl(panel.id)}
+                  className="absolute inset-0 h-full w-full border-0"
+                  title={panel.title}
+                  allow="fullscreen"
+                />
+              </div>
+            </div>
           ))}
         </div>
       </main>
