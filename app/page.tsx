@@ -11,27 +11,27 @@ const GRAFANA_PANELS = [
   {
     id: "panel-5",
     title: "Signal Stream 1",
-    src: "https://abc123.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920202740&to=1777920232740&timezone=browser&refresh=5s&panelId=panel-5&__feature.dashboardSceneSolo=true",
+    src: "https://821d-116-96-46-5.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920202740&to=1777920232740&timezone=browser&refresh=5s&panelId=panel-5&__feature.dashboardSceneSolo=true",
   },
   {
     id: "panel-4",
     title: "Signal Stream 2",
-    src: "https://abc123.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920208178&to=1777920238178&timezone=browser&refresh=5s&panelId=panel-4&__feature.dashboardSceneSolo=true",
+    src: "https://821d-116-96-46-5.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920208178&to=1777920238178&timezone=browser&refresh=5s&panelId=panel-4&__feature.dashboardSceneSolo=true",
   },
   {
     id: "panel-3",
     title: "Signal Stream 3",
-    src: "https://abc123.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920217740&to=1777920247740&timezone=browser&refresh=5s&panelId=panel-3&__feature.dashboardSceneSolo=true",
+    src: "https://821d-116-96-46-5.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920217740&to=1777920247740&timezone=browser&refresh=5s&panelId=panel-3&__feature.dashboardSceneSolo=true",
   },
   {
     id: "panel-1",
     title: "Signal Stream 4",
-    src: "https://abc123.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920222729&to=1777920252729&timezone=browser&refresh=5s&panelId=panel-1&__feature.dashboardSceneSolo=true",
+    src: "https://821d-116-96-46-5.ngrok-free.app/d-solo/ad498n8/testing?orgId=1&from=1777920222729&to=1777920252729&timezone=browser&refresh=5s&panelId=panel-1&__feature.dashboardSceneSolo=true",
   },
 ]
 
 // Grafana main page URL (admin only)
-const GRAFANA_MAIN_URL = "https://abc123.ngrok-free.app"
+const GRAFANA_MAIN_URL = "https://821d-116-96-46-5.ngrok-free.app"
 
 // Test credentials (no database yet)
 const TEST_USERS = [
