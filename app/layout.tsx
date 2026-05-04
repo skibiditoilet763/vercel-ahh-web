@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Grafana Dashboard',
-  description: 'Embedded Grafana Dashboard Viewer',
+  title: 'Monitoring Dashboard',
+  description: 'Real-Time System Monitoring',
   generator: 'v0.app',
   icons: {
     icon: [

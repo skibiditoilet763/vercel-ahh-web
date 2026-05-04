@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TimeRangePicker } from "@/components/time-range-picker"
+import { MetricPanel } from "@/components/metric-panel"
 
 // Base URL for Grafana panels
 const BASE_URL = "https://6387-2402-800-61ca-7aea-d56-cd0c-31c8-2816.ngrok-free.app/d-solo/ad498n8/testing"
@@ -20,12 +21,12 @@ const TEST_USERS = [
   { username: "user", password: "user123", role: "customer" },
 ]
 
-// Panel configurations
+// Panel configurations with Grafana queries
 const PANELS = [
-  { id: "panel-1", title: "Signal Stream 1" },
-  { id: "panel-4", title: "Signal Stream 2" },
-  { id: "panel-3", title: "Signal Stream 3" },
-  { id: "panel-5", title: "Signal Stream 4" },
+  { id: "panel-1", title: "Signal Stream 1", query: "up" },
+  { id: "panel-4", title: "Signal Stream 2", query: "process_resident_memory_bytes" },
+  { id: "panel-3", title: "Signal Stream 3", query: "rate(requests_total[5m])" },
+  { id: "panel-5", title: "Signal Stream 4", query: "node_cpu_seconds_total" },
 ]
 
 
@@ -48,7 +49,6 @@ export default function DucsDashboard() {
   const [userRole, setUserRole] = useState("")
   const [error, setError] = useState("")
 
-  const [refreshKey, setRefreshKey] = useState(0)
   const [timeRange, setTimeRange] = useState({
     from: Date.now() - 60 * 60 * 1000,
     to: Date.now(),
@@ -169,8 +169,6 @@ export default function DucsDashboard() {
 
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate)
-      } else {
-        setRefreshKey((prev) => prev + 1)
       }
     }
 
@@ -189,17 +187,13 @@ export default function DucsDashboard() {
     }
   }, [])
 
-  // Build panel URL with current time range
-  const buildPanelUrl = useCallback((panelId: string) => {
-    return `${BASE_URL}?orgId=1&from=${Math.floor(timeRange.from)}&to=${Math.floor(timeRange.to)}&timezone=browser&refresh=5s&panelId=${panelId}&__feature.dashboardSceneSolo=true`
-  }, [timeRange])
 
-  // Refresh all panels
+
+  // Refresh all panels (no longer needed for iframes)
   const handleRefresh = useCallback(() => {
     const range = timeRange.to - timeRange.from
     const now = Date.now()
     setTimeRange({ from: now - range, to: now })
-    setRefreshKey((prev) => prev + 1)
   }, [timeRange])
 
   // Zoom in (reduce time range by 50%)
@@ -403,23 +397,14 @@ export default function DucsDashboard() {
       <main className="flex-1 p-6 overflow-auto">
         <div className="grid h-full gap-4 grid-cols-1 md:grid-cols-2 auto-rows-max">
           {PANELS.map((panel) => (
-            <div
+            <MetricPanel
               key={panel.id}
-              className="flex flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-cyan-500/50 transition-colors"
-            >
-              <div className="flex items-center border-b border-border px-4 py-3 bg-muted/20">
-                <h2 className="text-sm font-semibold text-foreground">{panel.title}</h2>
-              </div>
-              <div className="relative flex-1 min-h-[250px]">
-                <iframe
-                  key={`${panel.id}-${refreshKey}`}
-                  src={buildPanelUrl(panel.id)}
-                  className="absolute inset-0 h-full w-full border-0"
-                  title={panel.title}
-                  allow="fullscreen"
-                />
-              </div>
-            </div>
+              panelId={panel.id}
+              title={panel.title}
+              query={panel.query}
+              timeRange={timeRange}
+              pollInterval={5000}
+            />
           ))}
         </div>
       </main>
