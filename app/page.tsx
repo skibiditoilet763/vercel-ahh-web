@@ -19,7 +19,6 @@ import {
   BarChart2,
   Layers,
   ExternalLink,
-  X,
   FileText,
   WifiOff,
 } from "lucide-react"
@@ -142,167 +141,7 @@ function LiveClock() {
   return <span className="font-mono text-xs text-muted-foreground tabular-nums">{time}</span>
 }
 
-// ─── Alerts hover panel — fixed-position so it floats above iframes
-function AlertBadge({ alerts, onReport }: { alerts: Alert[]; onReport: (id: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const [dropPos, setDropPos] = useState({ top: 0, left: 0 })
-  const anchorRef = useRef<HTMLDivElement>(null)
-  const active = alerts.filter((a) => !a.acknowledged)
-  const count = active.length
 
-  const handleMouseEnter = () => {
-    if (anchorRef.current) {
-      const rect = anchorRef.current.getBoundingClientRect()
-      setDropPos({
-        top: rect.bottom + 8,
-        left: rect.left + rect.width / 2,
-      })
-    }
-    setOpen(true)
-  }
-
-  return (
-    <div
-      ref={anchorRef}
-      className="relative"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <div
-        className={`flex items-center gap-1.5 cursor-default select-none ${count > 0 ? "text-[var(--factory-orange)]" : "text-[var(--factory-green)]"}`}
-      >
-        <AlertTriangle className="h-3.5 w-3.5" />
-        <div className="flex flex-col leading-none">
-          <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Alerts</span>
-          <span className="text-xs font-bold tabular-nums">{count}</span>
-        </div>
-        {count > 0 && (
-          <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-[var(--factory-orange)] animate-ping opacity-75" />
-        )}
-      </div>
-
-      {/* Fixed-position dropdown — renders above iframes */}
-      {open && (
-        <div
-          className="fixed z-[9999] w-80 rounded-sm border border-border bg-card shadow-2xl"
-          style={{ top: dropPos.top, left: dropPos.left, transform: "translateX(-50%)" }}
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
-        >
-          {/* Arrow */}
-          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-l border-t border-border bg-card" />
-
-          <div className="p-3 border-b border-border">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
-              Active Incidents
-            </span>
-          </div>
-
-          {active.length === 0 ? (
-            <div className="flex items-center gap-2 p-4">
-              <CheckCircle2 className="h-4 w-4 text-[var(--factory-green)]" />
-              <span className="text-xs text-muted-foreground">All systems nominal</span>
-            </div>
-          ) : (
-            <ul className="flex flex-col divide-y divide-border max-h-72 overflow-y-auto">
-              {active.map((alert) => (
-                <li key={alert.id} className="p-3 flex flex-col gap-2">
-                  <div className="flex items-start gap-2">
-                    <WifiOff className="h-3.5 w-3.5 shrink-0 mt-0.5 text-[var(--factory-orange)]" />
-                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                      <span className="text-xs font-semibold text-foreground leading-tight">{alert.title}</span>
-                      <span className="text-[10px] text-muted-foreground leading-relaxed">{alert.detail}</span>
-                      <span className="text-[9px] text-muted-foreground font-mono mt-0.5">
-                        {new Date(alert.ts).toLocaleTimeString("en-GB")}
-                      </span>
-                    </div>
-                  </div>
-                  {!alert.reported ? (
-                    <Button
-                      size="sm"
-                      className="h-6 w-full rounded-sm bg-[var(--factory-orange)]/10 border border-[var(--factory-orange)]/30 text-[var(--factory-orange)] text-[10px] tracking-widest uppercase hover:bg-[var(--factory-orange)]/20"
-                      onClick={() => onReport(alert.id)}
-                    >
-                      <FileText className="h-3 w-3 mr-1" />
-                      Report Incident
-                    </Button>
-                  ) : (
-                    <div className="flex items-center gap-1.5 justify-center">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--factory-amber)] animate-pulse" />
-                      <span className="text-[9px] tracking-widest uppercase text-[var(--factory-amber)]">
-                        Incident logged — recovery in progress
-                      </span>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Active channels badge with hover
-function ChannelBadge({
-  activeChannels,
-  total,
-  alerts,
-}: {
-  activeChannels: Set<string>
-  total: number
-  alerts: Alert[]
-}) {
-  const [open, setOpen] = useState(false)
-  const count = activeChannels.size
-
-  return (
-    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <div className="flex items-center gap-1.5 cursor-default select-none text-[var(--factory-cyan)]">
-        <Radio className="h-3.5 w-3.5" />
-        <div className="flex flex-col leading-none">
-          <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Active Channels</span>
-          <span className={`text-xs font-bold tabular-nums ${count < total ? "text-[var(--factory-amber)]" : "text-[var(--factory-cyan)]"}`}>
-            {count} / {total}
-          </span>
-        </div>
-      </div>
-
-      {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-64 rounded-sm border border-border bg-card shadow-2xl">
-          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-l border-t border-border bg-card" />
-          <div className="p-3 border-b border-border">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">Channel Status</span>
-          </div>
-          <ul className="flex flex-col divide-y divide-border">
-            {CHANNEL_DEFS.map((ch) => {
-              const isUp = activeChannels.has(ch.id)
-              const fault = alerts.find((a) => a.channelId === ch.id && !a.acknowledged)
-              return (
-                <li key={ch.id} className="flex items-center gap-2.5 px-3 py-2">
-                  <span className={`h-2 w-2 rounded-full shrink-0 ${isUp ? "bg-[var(--factory-green)]" : "bg-[var(--factory-orange)] animate-pulse"}`} />
-                  <div className="flex flex-col leading-none flex-1 min-w-0">
-                    <span className="text-xs text-foreground">{ch.title}</span>
-                    {!isUp && fault && (
-                      <span className="text-[10px] text-[var(--factory-orange)] mt-0.5 truncate">{fault.title}</span>
-                    )}
-                    {isUp && (
-                      <span className="text-[9px] text-muted-foreground mt-0.5">Nominal</span>
-                    )}
-                  </div>
-                  <span className={`text-[9px] font-mono uppercase tracking-wide ${isUp ? "text-[var(--factory-green)]" : "text-[var(--factory-orange)]"}`}>
-                    {isUp ? "UP" : "DOWN"}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
-}
 
 export default function KilnOS() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -326,6 +165,7 @@ export default function KilnOS() {
     setSessionChecked(true)
   }, [])
 
+  const [activeTab, setActiveTab] = useState<"dashboard" | "alerts">("dashboard")
   const [refreshKey, setRefreshKey] = useState(0)
   const [timeRange, setTimeRange] = useState({
     from: Date.now() - 60 * 60 * 1000,
@@ -673,17 +513,58 @@ export default function KilnOS() {
 
         <div className="h-6 w-px bg-border" />
 
+        {/* Tab nav */}
+        <div className="flex items-center gap-1 mr-2">
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+              activeTab === "dashboard"
+                ? "bg-[var(--factory-cyan)] text-[var(--background)]"
+                : "text-muted-foreground hover:text-foreground hover:bg-[var(--factory-panel)]"
+            }`}
+          >
+            <BarChart2 className="h-3 w-3" />
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab("alerts")}
+            className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+              activeTab === "alerts"
+                ? "bg-[var(--factory-orange)] text-white"
+                : activeAlerts.length > 0
+                ? "text-[var(--factory-orange)] hover:bg-[var(--factory-orange)]/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-[var(--factory-panel)]"
+            }`}
+          >
+            <AlertTriangle className="h-3 w-3" />
+            Alerts
+            {activeAlerts.length > 0 && (
+              <span className={`ml-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${
+                activeTab === "alerts" ? "bg-white/20 text-white" : "bg-[var(--factory-orange)] text-white"
+              }`}>
+                {activeAlerts.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div className="h-6 w-px bg-border" />
+
         {/* Live stats row */}
         <div className="hidden md:flex items-center gap-5 flex-1 px-2">
 
-          {/* Active channels — interactive */}
-          <ChannelBadge
-            activeChannels={activeChannels}
-            total={CHANNEL_DEFS.length}
-            alerts={alerts}
-          />
+          {/* Active channels */}
+          <div className="flex items-center gap-1.5">
+            <Radio className="h-3.5 w-3.5 text-[var(--factory-cyan)]" />
+            <div className="flex flex-col leading-none">
+              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Active Channels</span>
+              <span className={`text-xs font-bold tabular-nums ${activeChannels.size < CHANNEL_DEFS.length ? "text-[var(--factory-amber)]" : "text-[var(--factory-cyan)]"}`}>
+                {activeChannels.size} / {CHANNEL_DEFS.length}
+              </span>
+            </div>
+          </div>
 
-          {/* Sampling rate — static */}
+          {/* Sampling rate */}
           <div className="flex items-center gap-1.5 text-[var(--factory-green)]">
             <Activity className="h-3.5 w-3.5" />
             <div className="flex flex-col leading-none">
@@ -692,7 +573,7 @@ export default function KilnOS() {
             </div>
           </div>
 
-          {/* System load — driven by channel count + production */}
+          {/* System load */}
           <div className={`flex items-center gap-1.5 ${loadColor}`}>
             <Cpu className="h-3.5 w-3.5" />
             <div className="flex flex-col leading-none">
@@ -701,7 +582,7 @@ export default function KilnOS() {
             </div>
           </div>
 
-          {/* Throughput — number only, no graph */}
+          {/* Throughput */}
           <div className="flex items-center gap-1.5 text-[var(--factory-cyan)]">
             <Activity className="h-3.5 w-3.5" />
             <div className="flex flex-col leading-none">
@@ -709,9 +590,6 @@ export default function KilnOS() {
               <span className="text-xs font-bold tabular-nums">{currentActiveSignals} sig/s</span>
             </div>
           </div>
-
-          {/* Alerts — hover to see detail */}
-          <AlertBadge alerts={alerts} onReport={handleReport} />
         </div>
 
         {/* Controls */}
@@ -762,7 +640,7 @@ export default function KilnOS() {
         </div>
       </header>
 
-      {/* ── Status bar ──────────────────────────────────────────────── */}
+      {/* ── Status bar ───────────────────────���──────────────────────── */}
       <div className="relative z-10 flex h-7 items-center justify-between border-b border-border bg-[var(--factory-panel)] px-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
@@ -792,73 +670,184 @@ export default function KilnOS() {
         </div>
       </div>
 
-      {/* ── Channel grid ─────────────────────────────────────────────── */}
-      <main className="relative z-10 flex-1 p-4 overflow-auto">
-        <div className="grid gap-3 grid-cols-1 md:grid-cols-2 h-full">
-          {CHANNEL_DEFS.map((panel) => {
-            const isUp = activeChannels.has(panel.id)
-            const fault = alerts.find((a) => a.channelId === panel.id && !a.acknowledged)
-            const status = isUp ? "nominal" : "error"
-            return (
-              <div
-                key={panel.id}
-                className={`group flex flex-col overflow-hidden rounded-sm border transition-colors duration-300 bg-card ${
-                  isUp
-                    ? "border-border hover:border-[var(--factory-cyan)]/40"
-                    : "border-[var(--factory-orange)]/50 hover:border-[var(--factory-orange)]/70"
-                }`}
-              >
-                {/* Panel header */}
-                <div className={`flex items-center justify-between border-b px-3 py-2 ${isUp ? "border-border bg-[var(--factory-panel)]" : "border-[var(--factory-orange)]/30 bg-[var(--factory-orange)]/5"}`}>
-                  <div className="flex items-center gap-2">
-                    <StatusDot status={status} />
-                    <div className="flex flex-col leading-none">
-                      <span className="text-xs font-semibold tracking-wide text-foreground">{panel.title}</span>
-                      <span className="text-[9px] tracking-widest uppercase text-muted-foreground">{panel.subtitle}</span>
+      {/* ── Main content ─────────────────────────────────────────────── */}
+      <main className="relative z-10 flex-1 overflow-auto">
+
+        {/* Dashboard tab */}
+        {activeTab === "dashboard" && (
+          <div className="grid gap-3 grid-cols-1 md:grid-cols-2 h-full p-4">
+            {CHANNEL_DEFS.map((panel) => {
+              const isUp = activeChannels.has(panel.id)
+              const fault = alerts.find((a) => a.channelId === panel.id && !a.acknowledged)
+              const status = isUp ? "nominal" : "warning"
+              return (
+                <div
+                  key={panel.id}
+                  className={`group flex flex-col overflow-hidden rounded-sm border transition-colors duration-300 bg-card ${
+                    isUp
+                      ? "border-border hover:border-[var(--factory-cyan)]/40"
+                      : "border-[var(--factory-amber)]/60"
+                  }`}
+                >
+                  {/* Panel header */}
+                  <div className={`flex items-center justify-between border-b px-3 py-2 ${
+                    isUp ? "border-border bg-[var(--factory-panel)]" : "border-[var(--factory-amber)]/30 bg-[var(--factory-amber)]/5"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <StatusDot status={status} />
+                      <div className="flex flex-col leading-none">
+                        <span className="text-xs font-semibold tracking-wide text-foreground">{panel.title}</span>
+                        <span className="text-[9px] tracking-widest uppercase text-muted-foreground">{panel.subtitle}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!isUp && fault && (
+                        <button
+                          onClick={() => setActiveTab("alerts")}
+                          className="flex items-center gap-1 rounded-sm border border-[var(--factory-amber)]/40 bg-[var(--factory-amber)]/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[var(--factory-amber)] hover:bg-[var(--factory-amber)]/20 transition-colors"
+                        >
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          {fault.title}
+                        </button>
+                      )}
+                      <span className="font-mono text-[9px] text-muted-foreground">
+                        {panel.id.toUpperCase().replace("-", "_")}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {!isUp && fault && (
-                      <span className="flex items-center gap-1 rounded-sm border border-[var(--factory-orange)]/30 bg-[var(--factory-orange)]/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[var(--factory-orange)]">
-                        <AlertTriangle className="h-2.5 w-2.5" />
-                        {fault.title}
-                      </span>
+
+                  {/* Panel body */}
+                  <div className="relative flex-1 min-h-[240px] bg-[var(--background)]">
+                    {!isUp ? (
+                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--background)]">
+                        <WifiOff className="h-8 w-8 text-[var(--factory-amber)]/60" />
+                        <div className="flex flex-col items-center gap-1 text-center px-6">
+                          <span className="text-xs font-semibold text-[var(--factory-amber)]">
+                            {fault?.title ?? "Channel Offline"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground leading-relaxed max-w-[240px]">
+                            {fault?.detail ?? "No data. Awaiting incident report."}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setActiveTab("alerts")}
+                          className="flex items-center gap-1.5 mt-1 rounded-sm border border-[var(--factory-amber)]/30 bg-[var(--factory-amber)]/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--factory-amber)] hover:bg-[var(--factory-amber)]/20 transition-colors"
+                        >
+                          <FileText className="h-3 w-3" />
+                          View in Alerts
+                        </button>
+                      </div>
+                    ) : (
+                      <TelemetryFrame
+                        key={`${panel.id}-${refreshKey}`}
+                        src={buildPanelUrl(panel.id)}
+                        title={panel.title}
+                      />
                     )}
-                    <span className="font-mono text-[9px] text-muted-foreground">
-                      {panel.id.toUpperCase().replace("-", "_")}
-                    </span>
                   </div>
                 </div>
+              )
+            })}
+          </div>
+        )}
 
-                {/* Channel down overlay */}
-                <div className="relative flex-1 min-h-[240px] bg-[var(--background)]">
-                  {!isUp ? (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--background)]">
-                      <WifiOff className="h-8 w-8 text-[var(--factory-orange)]/60" />
-                      <div className="flex flex-col items-center gap-1 text-center px-6">
-                        <span className="text-xs font-semibold text-[var(--factory-orange)]">
-                          {fault?.title ?? "Channel Offline"}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground leading-relaxed max-w-[240px]">
-                          {fault?.detail ?? "No data. Channel recovery in progress."}
-                        </span>
-                      </div>
-                      <span className="font-mono text-[9px] tracking-widest uppercase text-muted-foreground animate-pulse">
-                        Awaiting recovery...
-                      </span>
-                    </div>
-                  ) : (
-                    <TelemetryFrame
-                      key={`${panel.id}-${refreshKey}`}
-                      src={buildPanelUrl(panel.id)}
-                      title={panel.title}
-                    />
-                  )}
+        {/* Alerts tab */}
+        {activeTab === "alerts" && (
+          <div className="p-6 max-w-3xl mx-auto">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <h2 className="text-sm font-bold tracking-widest uppercase text-foreground">Incident Log</h2>
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                  {activeAlerts.length} active &mdash; {alerts.filter((a) => a.acknowledged).length} resolved
+                </p>
+              </div>
+              {activeAlerts.length === 0 && (
+                <div className="flex items-center gap-2 rounded-sm border border-[var(--factory-green)]/30 bg-[var(--factory-green)]/5 px-3 py-2">
+                  <CheckCircle2 className="h-4 w-4 text-[var(--factory-green)]" />
+                  <span className="text-xs text-[var(--factory-green)] font-semibold tracking-wide">All systems nominal</span>
+                </div>
+              )}
+            </div>
+
+            {alerts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+                <CheckCircle2 className="h-12 w-12 text-[var(--factory-green)]/40" />
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold text-muted-foreground">No incidents recorded</span>
+                  <span className="text-xs text-muted-foreground">Incidents will appear here when channels report faults</span>
                 </div>
               </div>
-            )
-          })}
-        </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {alerts.map((alert) => {
+                  const channel = CHANNEL_DEFS.find((c) => c.id === alert.channelId)
+                  return (
+                    <div
+                      key={alert.id}
+                      className={`rounded-sm border bg-card transition-colors ${
+                        alert.acknowledged
+                          ? "border-border opacity-60"
+                          : alert.reported
+                          ? "border-[var(--factory-amber)]/40 bg-[var(--factory-amber)]/5"
+                          : "border-[var(--factory-amber)]/60 bg-[var(--factory-amber)]/5"
+                      }`}
+                    >
+                      {/* Alert header */}
+                      <div className={`flex items-center justify-between border-b px-4 py-2.5 ${
+                        alert.acknowledged ? "border-border" : "border-[var(--factory-amber)]/20"
+                      }`}>
+                        <div className="flex items-center gap-2.5">
+                          {alert.acknowledged ? (
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--factory-green)]" />
+                          ) : (
+                            <AlertTriangle className={`h-4 w-4 shrink-0 text-[var(--factory-amber)] ${!alert.reported ? "animate-pulse" : ""}`} />
+                          )}
+                          <div className="flex flex-col leading-none gap-0.5">
+                            <span className="text-xs font-bold text-foreground">{alert.title}</span>
+                            <span className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                              {channel?.title ?? alert.channelId}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {alert.acknowledged && (
+                            <span className="text-[9px] tracking-widest uppercase font-semibold text-[var(--factory-green)]">Resolved</span>
+                          )}
+                          {!alert.acknowledged && alert.reported && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--factory-amber)] animate-pulse" />
+                              <span className="text-[9px] tracking-widest uppercase text-[var(--factory-amber)]">Recovery in progress</span>
+                            </div>
+                          )}
+                          <span className="font-mono text-[9px] text-muted-foreground">
+                            {new Date(alert.ts).toLocaleTimeString("en-GB")} &nbsp;
+                            {new Date(alert.ts).toLocaleDateString("en-GB")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Alert body */}
+                      <div className="px-4 py-3 flex items-start justify-between gap-4">
+                        <p className="text-xs text-muted-foreground leading-relaxed flex-1">{alert.detail}</p>
+                        {!alert.acknowledged && !alert.reported && (
+                          <Button
+                            size="sm"
+                            className="shrink-0 h-8 rounded-sm bg-[var(--factory-amber)]/10 border border-[var(--factory-amber)]/40 text-[var(--factory-amber)] text-[10px] tracking-widest uppercase hover:bg-[var(--factory-amber)]/20 font-semibold"
+                            onClick={() => handleReport(alert.id)}
+                          >
+                            <FileText className="h-3.5 w-3.5 mr-1.5" />
+                            Report Incident
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
       </main>
 
       {/* ── Footer bar ──────────────────────────────────────────────── */}
