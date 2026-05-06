@@ -488,7 +488,7 @@ export default function KilnOS() {
 
   // ─── Main OS shell
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background font-sans">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-background font-sans">
       <div
         className="pointer-events-none fixed inset-0 opacity-[0.025]"
         style={{
@@ -671,11 +671,11 @@ export default function KilnOS() {
       </div>
 
       {/* ── Main content ─────────────────────────────────────────────── */}
-      <main className="relative z-10 flex-1 overflow-auto">
+      <main className="relative z-10 flex-1 overflow-hidden">
 
         {/* Dashboard tab */}
         {activeTab === "dashboard" && (
-          <div className="grid gap-3 grid-cols-1 md:grid-cols-2 h-full p-4">
+          <div className="grid gap-3 grid-cols-1 md:grid-cols-2 h-full p-4 overflow-hidden">
             {CHANNEL_DEFS.map((panel) => {
               const isUp = activeChannels.has(panel.id)
               const fault = alerts.find((a) => a.channelId === panel.id && !a.acknowledged)
@@ -753,6 +753,7 @@ export default function KilnOS() {
 
         {/* Alerts tab */}
         {activeTab === "alerts" && (
+          <div className="h-full overflow-y-auto">
           <div className="p-6 max-w-3xl mx-auto">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
@@ -845,6 +846,7 @@ export default function KilnOS() {
                 })}
               </div>
             )}
+          </div>
           </div>
         )}
 
