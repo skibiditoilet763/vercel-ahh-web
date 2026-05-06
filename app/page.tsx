@@ -589,19 +589,19 @@ export default function KilnOS() {
             onClick={() => setActiveTab("alerts")}
             className={`flex items-center gap-1.5 h-7 px-2.5 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
               activeTab === "alerts"
-                ? "bg-[var(--factory-orange)] text-white"
-                : activeAlerts.length > 0
-                ? "text-[var(--factory-orange)] hover:bg-[var(--factory-orange)]/10"
+                ? "bg-[var(--factory-cyan)] text-[var(--background)]"
+                : alerts.length > 0
+                ? "text-[var(--factory-cyan)] hover:bg-[var(--factory-cyan)]/10"
                 : "text-muted-foreground hover:text-foreground hover:bg-[var(--factory-panel)]"
             }`}
           >
-            <AlertTriangle className="h-3 w-3" />
-            <span className="hidden sm:inline">Alerts</span>
-            {activeAlerts.length > 0 && (
+            <FileText className="h-3 w-3" />
+            <span className="hidden sm:inline">Alert Log</span>
+            {alerts.length > 0 && (
               <span className={`flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${
-                activeTab === "alerts" ? "bg-white/20 text-white" : "bg-[var(--factory-orange)] text-white"
+                activeTab === "alerts" ? "bg-white/20 text-white" : "bg-[var(--factory-cyan)] text-white"
               }`}>
-                {activeAlerts.length}
+                {alerts.length}
               </span>
             )}
           </button>
@@ -761,13 +761,19 @@ export default function KilnOS() {
                     </div>
                     <div className="flex items-center gap-2">
                       {!isUp && fault && (
-                        <button
-                          onClick={() => setActiveTab("alerts")}
-                          className="flex items-center gap-1 rounded-sm border border-[var(--factory-amber)]/40 bg-[var(--factory-amber)]/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[var(--factory-amber)] hover:bg-[var(--factory-amber)]/20 transition-colors"
-                        >
-                          <AlertTriangle className="h-2.5 w-2.5" />
-                          {fault.title}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <span className="flex items-center gap-1 rounded-sm border border-[var(--factory-amber)]/40 bg-[var(--factory-amber)]/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[var(--factory-amber)]">
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            {fault.title}
+                          </span>
+                          <Button
+                            size="sm"
+                            className="h-5 px-2 rounded-sm bg-[var(--factory-amber)]/10 border border-[var(--factory-amber)]/40 text-[var(--factory-amber)] text-[8px] tracking-widest uppercase hover:bg-[var(--factory-amber)]/20 font-bold"
+                            onClick={() => handleReport(fault.id)}
+                          >
+                            Report
+                          </Button>
+                        </div>
                       )}
                       <span className="font-mono text-[9px] text-muted-foreground">
                         {panel.id.toUpperCase().replace("-", "_")}
@@ -956,18 +962,8 @@ export default function KilnOS() {
                       </div>
 
                       {/* Alert body */}
-                      <div className="px-4 py-3 flex items-start justify-between gap-4">
-                        <p className="text-xs text-muted-foreground leading-relaxed flex-1">{alert.detail}</p>
-                        {!alert.acknowledged && !alert.reported && (
-                          <Button
-                            size="sm"
-                            className="shrink-0 h-8 rounded-sm bg-[var(--factory-amber)]/10 border border-[var(--factory-amber)]/40 text-[var(--factory-amber)] text-[10px] tracking-widest uppercase hover:bg-[var(--factory-amber)]/20 font-semibold"
-                            onClick={() => handleReport(alert.id)}
-                          >
-                            <FileText className="h-3.5 w-3.5 mr-1.5" />
-                            Report Incident
-                          </Button>
-                        )}
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-muted-foreground leading-relaxed">{alert.detail}</p>
                       </div>
                     </div>
                   )
