@@ -234,7 +234,7 @@ export default function KilnOS() {
 
   // ─── Schedule random events every 20–40 s
   const scheduleNextEvent = useCallback(() => {
-    const delay = 20000 + Math.random() * 20000
+    const delay = 10000 + Math.random() * 5000
     eventTimerRef.current = setTimeout(() => {
       triggerChannelEvent()
       scheduleNextEvent()
