@@ -499,9 +499,9 @@ export default function KilnOS() {
       />
 
       {/* ── Top bar ─────────────────────────────────────────────────── */}
-      <header className="relative z-10 flex h-14 shrink-0 items-center border-b border-border bg-card px-4 gap-3">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5 min-w-0 mr-4">
+      <header className="relative z-10 flex h-14 shrink-0 items-center border-b border-border bg-card px-4 gap-4">
+        {/* Brand — fixed width, no shrink */}
+        <div className="flex items-center gap-2.5 shrink-0">
           <div className="flex h-7 w-7 items-center justify-center rounded-sm border border-[var(--factory-cyan)]/40 bg-[var(--factory-panel)]">
             <Layers className="h-4 w-4 text-[var(--factory-cyan)]" />
           </div>
@@ -513,8 +513,8 @@ export default function KilnOS() {
 
         <div className="h-6 w-px bg-border" />
 
-        {/* Tab nav */}
-        <div className="flex items-center gap-1 mr-2">
+        {/* Tab nav — own section, no margin */}
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
@@ -550,8 +550,8 @@ export default function KilnOS() {
 
         <div className="h-6 w-px bg-border" />
 
-        {/* Live stats row */}
-        <div className="hidden md:flex items-center gap-5 flex-1 px-2">
+        {/* Live stats row — flex-1 to push controls to right */}
+        <div className="hidden lg:flex items-center gap-5 flex-1 px-2">
 
           {/* Active channels */}
           <div className="flex items-center gap-1.5">
