@@ -944,7 +944,7 @@ export default function MotionIQPage() {
             className="gap-1.5 text-muted-foreground hover:text-foreground h-7 rounded-sm px-2 text-xs"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Factory OS
+            Kiln OS
           </Button>
           <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">

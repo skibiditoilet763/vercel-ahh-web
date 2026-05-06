@@ -130,7 +130,7 @@ function SignalSparkline({ history }: { history: SignalRecord[] }) {
   )
 }
 
-export default function FactoryOS() {
+export default function KilnOS() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -312,7 +312,7 @@ export default function FactoryOS() {
               </div>
               <div className="text-center">
                 <h1 className="text-xl font-bold tracking-widest uppercase text-foreground">
-                  Factory OS
+                  Kiln OS
                 </h1>
                 <p className="mt-1 text-xs tracking-widest uppercase text-muted-foreground">
                   Industrial Operations Platform
@@ -426,7 +426,7 @@ export default function FactoryOS() {
           </div>
           <div className="flex flex-col leading-none">
             <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-foreground">
-              Factory OS
+              Kiln OS
             </span>
             <span className="text-[9px] tracking-widest uppercase text-muted-foreground">
               Operations Platform
