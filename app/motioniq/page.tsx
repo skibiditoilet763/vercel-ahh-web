@@ -920,10 +920,10 @@ export default function MotionIQPage() {
 
   const NavButton = ({ id, icon, label }: { id: string; icon: React.ReactNode; label: string }) => (
     <button
-      className={`flex items-center gap-2 px-3 py-2 text-left text-sm border-l-2 transition-colors w-full
+      className={`flex items-center gap-2 px-3 py-2 text-left text-xs border-l-2 transition-colors w-full tracking-wide font-mono
         ${activePage === id
-          ? "text-cyan-400 border-cyan-400 bg-cyan-400/5"
-          : "text-gray-500 border-transparent hover:text-gray-300 hover:bg-cyan-400/5"
+          ? "text-[var(--factory-cyan)] border-[var(--factory-cyan)] bg-[var(--factory-cyan)]/5"
+          : "text-muted-foreground border-transparent hover:text-foreground hover:bg-[var(--factory-cyan)]/5"
         }`}
       onClick={() => setActivePage(id)}
     >
@@ -933,62 +933,68 @@ export default function MotionIQPage() {
   )
 
   return (
-    <div className="flex flex-col h-screen bg-[#08090c] text-[#c8d4e0] font-sans">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-2 bg-[#0d1117] border-b border-[#1c2530]">
-        <div className="flex items-center gap-4">
+    <div className="flex flex-col h-screen bg-[var(--background)] text-[var(--foreground)] font-sans">
+      {/* Header — Factory OS shell */}
+      <header className="flex items-center justify-between px-4 h-14 bg-[var(--card)] border-b border-[var(--border)]">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.push("/")}
-            className="gap-2 text-gray-400 hover:text-white"
+            className="gap-1.5 text-muted-foreground hover:text-foreground h-7 rounded-sm px-2 text-xs"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Factory OS
           </Button>
-          <div className="w-px h-6 bg-[#1c2530]" />
+          <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 border border-cyan-400 rounded flex items-center justify-center text-cyan-400 text-xs font-mono">
+            <div className="flex h-7 w-12 items-center justify-center rounded-sm border border-[var(--factory-cyan)]/40 bg-[var(--factory-panel)] font-mono text-[10px] font-bold text-[var(--factory-cyan)]">
               VS1
             </div>
-            <div>
-              <div className="font-bold text-sm tracking-wider">MOTIONIQ</div>
-              <div className="text-[9px] text-gray-500 font-mono tracking-wider">COMMISSIONING</div>
+            <div className="flex flex-col leading-none">
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-foreground">MotionIQ</span>
+              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Sensor Commissioning</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1 border border-[#1c2530] rounded-full text-xs font-mono text-gray-500">
-            <div className={`w-2 h-2 rounded-full transition-all ${
-              connectionStatus === "on" ? "bg-green-400 shadow-[0_0_6px_#39ff14]" :
-              connectionStatus === "blink" ? "bg-yellow-400 animate-pulse" :
-              "bg-gray-600"
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-2 px-3 py-1 border rounded-sm text-[10px] font-mono tracking-widest uppercase ${
+            connectionStatus === "on"
+              ? "border-[var(--factory-green)]/30 text-[var(--factory-green)]"
+              : connectionStatus === "blink"
+              ? "border-[var(--factory-amber)]/30 text-[var(--factory-amber)]"
+              : "border-border text-muted-foreground"
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              connectionStatus === "on" ? "bg-[var(--factory-green)]" :
+              connectionStatus === "blink" ? "bg-[var(--factory-amber)] animate-pulse" :
+              "bg-border"
             }`} />
-            <span>{connectionStatus === "on" ? "CONNECTED" : connectionStatus === "blink" ? "SCANNING..." : "DISCONNECTED"}</span>
+            <span>{connectionStatus === "on" ? "Connected" : connectionStatus === "blink" ? "Scanning..." : "Offline"}</span>
           </div>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="w-52 bg-[#0d1117] border-r border-[#1c2530] flex flex-col overflow-y-auto">
-          <div className="border-b border-[#1c2530] py-1">
-            <div className="text-[8px] text-gray-600 px-3 py-1 font-mono tracking-widest">LINK</div>
+        <div className="w-52 bg-[var(--card)] border-r border-[var(--border)] flex flex-col overflow-y-auto">
+          <div className="border-b border-[var(--border)] py-1">
+            <div className="text-[8px] text-muted-foreground px-3 py-1 font-mono tracking-widest">LINK</div>
             <NavButton id="connect" icon={<svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.81-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>} label="Connect" />
           </div>
-          <div className="border-b border-[#1c2530] py-1">
-            <div className="text-[8px] text-gray-600 px-3 py-1 font-mono tracking-widest">MONITOR</div>
+          <div className="border-b border-[var(--border)] py-1">
+            <div className="text-[8px] text-muted-foreground px-3 py-1 font-mono tracking-widest">MONITOR</div>
             <NavButton id="dash" icon={<svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>} label="Dashboard" />
             <NavButton id="wave" icon={<svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>} label="Waveform" />
           </div>
-          <div className="border-b border-[#1c2530] py-1">
-            <div className="text-[8px] text-gray-600 px-3 py-1 font-mono tracking-widest">SETUP</div>
+          <div className="border-b border-[var(--border)] py-1">
+            <div className="text-[8px] text-muted-foreground px-3 py-1 font-mono tracking-widest">SETUP</div>
             <NavButton id="config" icon={<svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>} label="Configuration" />
             <NavButton id="cal" icon={<svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>} label="Calibration" />
           </div>
 
           {/* Sidebar status */}
-          <div className="mt-auto p-3 border-t border-[#1c2530] text-[9px] font-mono">
+          <div className="mt-auto p-3 border-t border-[var(--border)] text-[9px] font-mono">
             <div className="flex justify-between py-0.5"><span className="text-gray-600">RSSI</span><span className="text-green-400">{sidebarData.rssi}</span></div>
             <div className="flex justify-between py-0.5"><span className="text-gray-600">BAT</span><span className="text-green-400">{sidebarData.bat}</span></div>
             <div className="flex justify-between py-0.5"><span className="text-gray-600">PERIOD</span><span className="text-green-400">{sidebarData.per}</span></div>

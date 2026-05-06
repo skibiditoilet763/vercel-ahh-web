@@ -40,38 +40,48 @@
 }
 
 .dark {
-  --background: #0a0e27;
-  --foreground: #e4e9ff;
-  --card: #151b3f;
-  --card-foreground: #e4e9ff;
-  --popover: #151b3f;
-  --popover-foreground: #e4e9ff;
-  --primary: #00d4ff;
-  --primary-foreground: #0a0e27;
-  --secondary: #1e2a5f;
-  --secondary-foreground: #e4e9ff;
-  --muted: #1e2a5f;
-  --muted-foreground: #8a93c8;
-  --accent: #00d4ff;
-  --accent-foreground: #0a0e27;
-  --destructive: #ff3b5c;
-  --destructive-foreground: #e4e9ff;
-  --border: #1e2a5f;
-  --input: #1e2a5f;
-  --ring: #00d4ff;
-  --chart-1: #00d4ff;
-  --chart-2: #ff006e;
-  --chart-3: #00f67e;
-  --chart-4: #7c3aed;
-  --chart-5: #f97316;
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  /* Factory OS — dark industrial palette */
+  --background: #07090f;
+  --foreground: #c9d1e0;
+  --card: #0d1117;
+  --card-foreground: #c9d1e0;
+  --popover: #0d1117;
+  --popover-foreground: #c9d1e0;
+  --primary: #00c8ff;
+  --primary-foreground: #07090f;
+  --secondary: #111827;
+  --secondary-foreground: #c9d1e0;
+  --muted: #111827;
+  --muted-foreground: #4b5a72;
+  --accent: #00c8ff;
+  --accent-foreground: #07090f;
+  --destructive: #f04040;
+  --destructive-foreground: #c9d1e0;
+  --border: #1a2333;
+  --input: #1a2333;
+  --ring: #00c8ff;
+  --chart-1: #00c8ff;
+  --chart-2: #ff5f1f;
+  --chart-3: #00e676;
+  --chart-4: #ffc107;
+  --chart-5: #ef5350;
+  --sidebar: #0d1117;
+  --sidebar-foreground: #c9d1e0;
+  --sidebar-primary: #00c8ff;
+  --sidebar-primary-foreground: #07090f;
+  --sidebar-accent: #111827;
+  --sidebar-accent-foreground: #c9d1e0;
+  --sidebar-border: #1a2333;
+  --sidebar-ring: #00c8ff;
+  /* Custom factory tokens */
+  --factory-cyan: #00c8ff;
+  --factory-orange: #ff5f1f;
+  --factory-green: #00e676;
+  --factory-amber: #ffc107;
+  --factory-surface: #0d1117;
+  --factory-panel: #111827;
+  --factory-border: #1a2333;
+  --factory-grid: #0e1520;
 }
 
 @theme inline {
