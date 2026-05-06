@@ -40,26 +40,26 @@ const TEST_USERS = [
 const PANELS = [
   {
     id: "panel-5",
-    title: "Channel A — Vibration",
-    subtitle: "RMS envelope",
+    title: "Power Consumption",
+    subtitle: "Voltage · Current · Power · PF",
     status: "nominal",
   },
   {
     id: "panel-4",
-    title: "Channel B — Temperature",
-    subtitle: "Thermal trend",
+    title: "Air Quality",
+    subtitle: "PM2.5 · PM10 · CO2 · VOC",
     status: "nominal",
   },
   {
     id: "panel-3",
-    title: "Channel C — Pressure",
-    subtitle: "Process pressure",
+    title: "XYZ Vibration",
+    subtitle: "Tri-axis RMS envelope",
     status: "warning",
   },
   {
     id: "panel-1",
-    title: "Channel D — Current",
-    subtitle: "Motor load",
+    title: "Environment",
+    subtitle: "Temperature · Humidity · Vibration",
     status: "nominal",
   },
 ]
@@ -79,6 +79,37 @@ interface SignalRecord {
 
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
+
+// ─── Per-panel iframe with custom loading overlay
+function TelemetryFrame({ src, title }: { src: string; title: string }) {
+  const [loaded, setLoaded] = useState(false)
+
+  return (
+    <div className="relative h-full w-full">
+      {/* Loading overlay — hidden once iframe fires onLoad */}
+      {!loaded && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--background)]">
+          {/* Animated ring */}
+          <div className="relative flex h-10 w-10 items-center justify-center">
+            <span className="absolute inline-block h-10 w-10 rounded-full border-2 border-[var(--factory-cyan)]/20" />
+            <span className="absolute inline-block h-10 w-10 animate-spin rounded-full border-2 border-transparent border-t-[var(--factory-cyan)]" />
+            <span className="h-2 w-2 rounded-full bg-[var(--factory-cyan)] animate-pulse" />
+          </div>
+          <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground">
+            Acquiring signal...
+          </span>
+        </div>
+      )}
+      <iframe
+        src={src}
+        title={title}
+        allow="fullscreen"
+        className="absolute inset-0 h-full w-full border-0"
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  )
 }
 
 // ─── Status indicator
@@ -249,7 +280,7 @@ export default function KilnOS() {
     (panelId: string) =>
       `${BASE_URL}?orgId=1&from=${Math.floor(timeRange.from)}&to=${Math.floor(
         timeRange.to
-      )}&timezone=browser&refresh=5s&panelId=${panelId}&__feature.dashboardSceneSolo=true`,
+      )}&timezone=browser&refresh=5s&panelId=${panelId}&__feature.dashboardSceneSolo=true&ngrok-skip-browser-warning=true`,
     [timeRange]
   )
 
@@ -628,13 +659,11 @@ export default function KilnOS() {
               </div>
 
               {/* Embedded telemetry panel */}
-              <div className="relative flex-1 min-h-[240px] bg-[#07090f]">
-                <iframe
+              <div className="relative flex-1 min-h-[240px] bg-[var(--background)]">
+                <TelemetryFrame
                   key={`${panel.id}-${refreshKey}`}
                   src={buildPanelUrl(panel.id)}
-                  className="absolute inset-0 h-full w-full border-0"
                   title={panel.title}
-                  allow="fullscreen"
                 />
               </div>
             </div>
@@ -645,7 +674,7 @@ export default function KilnOS() {
       {/* ── Footer bar ─────────────────────────────────────────── */}
       <footer className="relative z-10 flex h-6 shrink-0 items-center justify-between border-t border-border bg-[var(--factory-panel)] px-4">
         <span className="text-[9px] tracking-widest uppercase text-muted-foreground">
-          Factory OS v2.1.0 — Industrial Operations Platform
+          Kiln OS v2.1.0 — Industrial Operations Platform
         </span>
         <span className="font-mono text-[9px] text-muted-foreground">
           DATA RETENTION: 30 d &nbsp;|&nbsp; ENCRYPTION: AES-256 &nbsp;|&nbsp; UPTIME: 99.97%
