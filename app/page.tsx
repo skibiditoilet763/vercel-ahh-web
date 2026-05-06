@@ -142,14 +142,32 @@ function LiveClock() {
   return <span className="font-mono text-xs text-muted-foreground tabular-nums">{time}</span>
 }
 
-// ─── Alerts hover panel
+// ─── Alerts hover panel — fixed-position so it floats above iframes
 function AlertBadge({ alerts, onReport }: { alerts: Alert[]; onReport: (id: string) => void }) {
   const [open, setOpen] = useState(false)
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0 })
+  const anchorRef = useRef<HTMLDivElement>(null)
   const active = alerts.filter((a) => !a.acknowledged)
   const count = active.length
 
+  const handleMouseEnter = () => {
+    if (anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect()
+      setDropPos({
+        top: rect.bottom + 8,
+        left: rect.left + rect.width / 2,
+      })
+    }
+    setOpen(true)
+  }
+
   return (
-    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div
+      ref={anchorRef}
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setOpen(false)}
+    >
       <div
         className={`flex items-center gap-1.5 cursor-default select-none ${count > 0 ? "text-[var(--factory-orange)]" : "text-[var(--factory-green)]"}`}
       >
@@ -163,9 +181,14 @@ function AlertBadge({ alerts, onReport }: { alerts: Alert[]; onReport: (id: stri
         )}
       </div>
 
-      {/* Dropdown */}
+      {/* Fixed-position dropdown — renders above iframes */}
       {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-80 rounded-sm border border-border bg-card shadow-2xl">
+        <div
+          className="fixed z-[9999] w-80 rounded-sm border border-border bg-card shadow-2xl"
+          style={{ top: dropPos.top, left: dropPos.left, transform: "translateX(-50%)" }}
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+        >
           {/* Arrow */}
           <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-l border-t border-border bg-card" />
 
@@ -181,7 +204,7 @@ function AlertBadge({ alerts, onReport }: { alerts: Alert[]; onReport: (id: stri
               <span className="text-xs text-muted-foreground">All systems nominal</span>
             </div>
           ) : (
-            <ul className="flex flex-col divide-y divide-border max-h-64 overflow-y-auto">
+            <ul className="flex flex-col divide-y divide-border max-h-72 overflow-y-auto">
               {active.map((alert) => (
                 <li key={alert.id} className="p-3 flex flex-col gap-2">
                   <div className="flex items-start gap-2">
@@ -194,7 +217,7 @@ function AlertBadge({ alerts, onReport }: { alerts: Alert[]; onReport: (id: stri
                       </span>
                     </div>
                   </div>
-                  {!alert.reported && (
+                  {!alert.reported ? (
                     <Button
                       size="sm"
                       className="h-6 w-full rounded-sm bg-[var(--factory-orange)]/10 border border-[var(--factory-orange)]/30 text-[var(--factory-orange)] text-[10px] tracking-widest uppercase hover:bg-[var(--factory-orange)]/20"
@@ -203,11 +226,13 @@ function AlertBadge({ alerts, onReport }: { alerts: Alert[]; onReport: (id: stri
                       <FileText className="h-3 w-3 mr-1" />
                       Report Incident
                     </Button>
-                  )}
-                  {alert.reported && (
-                    <span className="text-[9px] tracking-widest uppercase text-muted-foreground text-center">
-                      Incident logged — monitoring recovery
-                    </span>
+                  ) : (
+                    <div className="flex items-center gap-1.5 justify-center">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--factory-amber)] animate-pulse" />
+                      <span className="text-[9px] tracking-widest uppercase text-[var(--factory-amber)]">
+                        Incident logged — recovery in progress
+                      </span>
+                    </div>
                   )}
                 </li>
               ))}
@@ -339,15 +364,16 @@ export default function KilnOS() {
     return () => clearInterval(id)
   }, [])
 
-  // ─── Random channel failure simulator
+  // ─── Recovery timers keyed by alertId so we can cancel per-alert
+  const recoveryTimers = useRef<Record<string, NodeJS.Timeout>>({})
+
+  // ─── Random channel failure simulator (no auto-recovery — waits for Report)
   const triggerChannelEvent = useCallback(() => {
-    // Pick a random channel to drop
     const allIds = CHANNEL_DEFS.map((c) => c.id)
     const victim = allIds[Math.floor(Math.random() * allIds.length)]
     const faultInfo = CHANNEL_FAULT_DESC[victim]
     const alertId = `alert-${Date.now()}`
 
-    // Drop channel + raise alert
     setActiveChannels((prev) => {
       const next = new Set(prev)
       next.delete(victim)
@@ -364,20 +390,6 @@ export default function KilnOS() {
       reported: false,
     }
     setAlerts((prev) => [newAlert, ...prev].slice(0, 10))
-
-    // Auto-recover after 5–7 s
-    const recoveryDelay = 5000 + Math.random() * 2000
-    eventTimerRef.current = setTimeout(() => {
-      setActiveChannels((prev) => {
-        const next = new Set(prev)
-        next.add(victim)
-        return next
-      })
-      // Acknowledge the alert (mark resolved)
-      setAlerts((prev) =>
-        prev.map((a) => (a.id === alertId ? { ...a, acknowledged: true } : a))
-      )
-    }, recoveryDelay)
   }, [])
 
   // ─── Schedule random events every 20–40 s
@@ -390,9 +402,28 @@ export default function KilnOS() {
   }, [triggerChannelEvent])
 
   const handleReport = useCallback((id: string) => {
+    // Mark as reported immediately (shows "monitoring recovery" text)
     setAlerts((prev) =>
       prev.map((a) => (a.id === id ? { ...a, reported: true } : a))
     )
+
+    // Recover the channel after 7–10 s
+    const delay = 7000 + Math.random() * 3000
+    recoveryTimers.current[id] = setTimeout(() => {
+      setAlerts((prev) => {
+        const alert = prev.find((a) => a.id === id)
+        if (!alert) return prev
+        // Re-add the channel
+        setActiveChannels((ch) => {
+          const next = new Set(ch)
+          next.add(alert.channelId)
+          return next
+        })
+        // Acknowledge the alert
+        return prev.map((a) => (a.id === id ? { ...a, acknowledged: true } : a))
+      })
+      delete recoveryTimers.current[id]
+    }, delay)
   }, [])
 
   const startSignalTracking = useCallback(() => {
@@ -447,6 +478,8 @@ export default function KilnOS() {
     sessionStorage.removeItem("kiln_session")
     if (signalIntervalRef.current) clearInterval(signalIntervalRef.current)
     if (eventTimerRef.current) clearTimeout(eventTimerRef.current)
+    Object.values(recoveryTimers.current).forEach(clearTimeout)
+    recoveryTimers.current = {}
     setSignalHistory([])
     setAlerts([])
     setActiveChannels(new Set(CHANNEL_DEFS.map((c) => c.id)))
@@ -483,6 +516,7 @@ export default function KilnOS() {
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
       if (signalIntervalRef.current) clearInterval(signalIntervalRef.current)
       if (eventTimerRef.current) clearTimeout(eventTimerRef.current)
+      Object.values(recoveryTimers.current).forEach(clearTimeout)
     }
   }, [])
 
