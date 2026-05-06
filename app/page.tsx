@@ -288,6 +288,16 @@ export default function KilnOS() {
     startSignalTracking()
   }, [isLoggedIn, activeChannels.size, startSignalTracking])
 
+  // ─── Start fault scheduler whenever user is logged in (login OR session restore)
+  useEffect(() => {
+    if (!isLoggedIn) return
+    scheduleNextEvent()
+    return () => {
+      if (eventTimerRef.current) clearTimeout(eventTimerRef.current)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn])
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -308,7 +318,6 @@ export default function KilnOS() {
     setUsername("")
     setPassword("")
     sessionStorage.setItem("kiln_session", JSON.stringify({ user: user.username, role: user.role }))
-    scheduleNextEvent()
   }
 
   const handleLogout = () => {
