@@ -522,36 +522,37 @@ export default function KilnOS() {
       />
 
       {/* ── Top bar ─────────────────────────────────────────────────── */}
-      <header className="relative z-10 flex h-14 shrink-0 items-center border-b border-border bg-card px-4 gap-4">
-        {/* Brand — fixed width, no shrink */}
-        <div className="flex items-center gap-2.5 shrink-0">
+      <header className="relative z-10 flex h-14 shrink-0 items-center border-b border-border bg-card px-3 gap-3 overflow-hidden">
+
+        {/* Brand — always visible, no shrink */}
+        <div className="flex items-center gap-2 shrink-0">
           <div className="flex h-7 w-7 items-center justify-center rounded-sm border border-[var(--factory-cyan)]/40 bg-[var(--factory-panel)]">
             <Layers className="h-4 w-4 text-[var(--factory-cyan)]" />
           </div>
-          <div className="flex flex-col leading-none">
+          <div className="hidden sm:flex flex-col leading-none">
             <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-foreground">Kiln OS</span>
             <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Operations Platform</span>
           </div>
         </div>
 
-        <div className="h-6 w-px bg-border" />
+        <div className="h-6 w-px bg-border shrink-0" />
 
-        {/* Tab nav — own section, no margin */}
+        {/* Tab nav — always visible */}
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+            className={`flex items-center gap-1.5 h-7 px-2.5 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
               activeTab === "dashboard"
                 ? "bg-[var(--factory-cyan)] text-[var(--background)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-[var(--factory-panel)]"
             }`}
           >
             <BarChart2 className="h-3 w-3" />
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
           </button>
           <button
             onClick={() => setActiveTab("alerts")}
-            className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+            className={`flex items-center gap-1.5 h-7 px-2.5 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
               activeTab === "alerts"
                 ? "bg-[var(--factory-orange)] text-white"
                 : activeAlerts.length > 0
@@ -560,9 +561,9 @@ export default function KilnOS() {
             }`}
           >
             <AlertTriangle className="h-3 w-3" />
-            Alerts
+            <span className="hidden sm:inline">Alerts</span>
             {activeAlerts.length > 0 && (
-              <span className={`ml-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${
+              <span className={`flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${
                 activeTab === "alerts" ? "bg-white/20 text-white" : "bg-[var(--factory-orange)] text-white"
               }`}>
                 {activeAlerts.length}
@@ -571,42 +572,34 @@ export default function KilnOS() {
           </button>
         </div>
 
-        <div className="h-6 w-px bg-border" />
+        <div className="h-6 w-px bg-border shrink-0 hidden xl:block" />
 
-        {/* Live stats row — flex-1 to push controls to right */}
-        <div className="hidden lg:flex items-center gap-5 flex-1 px-2">
-
-          {/* Active channels */}
-          <div className="flex items-center gap-1.5">
+        {/* Live stats — only on xl+ */}
+        <div className="hidden xl:flex items-center gap-4 flex-1 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Radio className="h-3.5 w-3.5 text-[var(--factory-cyan)]" />
             <div className="flex flex-col leading-none">
-              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Active Channels</span>
+              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Channels</span>
               <span className={`text-xs font-bold tabular-nums ${activeChannels.size < CHANNEL_DEFS.length ? "text-[var(--factory-amber)]" : "text-[var(--factory-cyan)]"}`}>
                 {activeChannels.size} / {CHANNEL_DEFS.length}
               </span>
             </div>
           </div>
-
-          {/* Sampling rate */}
-          <div className="flex items-center gap-1.5 text-[var(--factory-green)]">
+          <div className="flex items-center gap-1.5 shrink-0 text-[var(--factory-green)]">
             <Activity className="h-3.5 w-3.5" />
             <div className="flex flex-col leading-none">
-              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Sampling Rate</span>
+              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Sample</span>
               <span className="text-xs font-bold tabular-nums">5 s</span>
             </div>
           </div>
-
-          {/* System load */}
-          <div className={`flex items-center gap-1.5 ${loadColor}`}>
+          <div className={`flex items-center gap-1.5 shrink-0 ${loadColor}`}>
             <Cpu className="h-3.5 w-3.5" />
             <div className="flex flex-col leading-none">
-              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">System Load</span>
-              <span className="text-xs font-bold tabular-nums">{systemLoad} %</span>
+              <span className="text-[9px] tracking-widest uppercase text-muted-foreground">Load</span>
+              <span className="text-xs font-bold tabular-nums">{systemLoad}%</span>
             </div>
           </div>
-
-          {/* Throughput */}
-          <div className="flex items-center gap-1.5 text-[var(--factory-cyan)]">
+          <div className="flex items-center gap-1.5 shrink-0 text-[var(--factory-cyan)]">
             <Activity className="h-3.5 w-3.5" />
             <div className="flex flex-col leading-none">
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground">Throughput</span>
@@ -615,51 +608,59 @@ export default function KilnOS() {
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          <TimeRangePicker timeRange={timeRange} onTimeRangeChange={handleTimeRangeChange} />
-          <Button variant="outline" size="icon" className="h-7 w-7 rounded-sm border-border" onClick={handleZoomIn} title="Zoom In">
+        {/* Controls — ml-auto pushes to right edge */}
+        <div className="flex items-center gap-1 ml-auto shrink-0">
+          {/* Time range — hidden on small */}
+          <div className="hidden md:block">
+            <TimeRangePicker timeRange={timeRange} onTimeRangeChange={handleTimeRangeChange} />
+          </div>
+
+          {/* Zoom — icon only always */}
+          <Button variant="outline" size="icon" className="h-7 w-7 rounded-sm border-border shrink-0" onClick={handleZoomIn} title="Zoom In">
             <ZoomIn className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="icon" className="h-7 w-7 rounded-sm border-border" onClick={handleZoomOut} title="Zoom Out">
+          <Button variant="outline" size="icon" className="h-7 w-7 rounded-sm border-border shrink-0" onClick={handleZoomOut} title="Zoom Out">
             <ZoomOut className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="sm" onClick={handleRefresh} className="h-7 gap-1.5 rounded-sm border-border text-xs">
+
+          {/* Sync — text on md+, icon only on sm */}
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="h-7 rounded-sm border-border text-xs shrink-0 w-7 md:w-auto px-0 md:px-3 md:gap-1.5">
             <RefreshCw className="h-3 w-3" />
-            Sync
+            <span className="hidden md:inline">Sync</span>
           </Button>
 
-          <Link href="/motioniq">
-            <Button variant="outline" size="sm" className="h-7 gap-1.5 rounded-sm border-border text-xs hidden lg:flex">
+          {/* MotionIQ — hidden on md- */}
+          <Link href="/motioniq" className="hidden lg:block shrink-0">
+            <Button variant="outline" size="sm" className="h-7 gap-1.5 rounded-sm border-border text-xs">
               <Settings2 className="h-3 w-3" />
               MotionIQ
             </Button>
           </Link>
 
+          {/* Telemetry Engine — always visible for admin, truncation-safe */}
           {userRole === "admin" && (
             <Button
               size="sm"
-              className="h-7 gap-1.5 rounded-sm bg-[var(--factory-cyan)] text-[var(--background)] text-xs font-semibold hover:bg-[var(--factory-cyan)]/90 hidden lg:flex"
+              className="h-7 gap-1.5 rounded-sm bg-[var(--factory-cyan)] text-[var(--background)] text-xs font-semibold hover:bg-[var(--factory-cyan)]/90 shrink-0"
               onClick={() => window.open(INTERNAL_ADMIN_URL, "_blank")}
             >
-              <BarChart2 className="h-3 w-3" />
-              Telemetry Engine
-              <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+              <BarChart2 className="h-3 w-3 shrink-0" />
+              <span className="hidden md:inline">Telemetry Engine</span>
+              <ExternalLink className="h-2.5 w-2.5 opacity-60 shrink-0" />
             </Button>
           )}
 
-          <div className="h-5 w-px bg-border mx-1" />
+          <div className="h-5 w-px bg-border mx-0.5 shrink-0" />
 
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <User className="h-3.5 w-3.5" />
-              <span className="font-mono">{currentUser}</span>
-              <span className="ml-0.5 rounded-sm border border-border px-1 py-0.5 text-[9px] uppercase tracking-wider">{userRole}</span>
-            </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-muted-foreground hover:text-foreground" onClick={handleLogout} title="Sign out">
-              <LogOut className="h-3.5 w-3.5" />
-            </Button>
+          {/* User info — name hidden on sm */}
+          <div className="flex items-center gap-1">
+            <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <span className="hidden md:inline font-mono text-xs text-muted-foreground">{currentUser}</span>
+            <span className="hidden lg:inline ml-0.5 rounded-sm border border-border px-1 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">{userRole}</span>
           </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-muted-foreground hover:text-foreground shrink-0" onClick={handleLogout} title="Sign out">
+            <LogOut className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </header>
 
