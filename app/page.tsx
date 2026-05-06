@@ -181,6 +181,7 @@ export default function KilnOS() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "alerts">("dashboard")
   const [refreshKey, setRefreshKey] = useState(0)
   const [alertFilter, setAlertFilter] = useState<"all" | "in-progress" | "resolved">("all")
+  const [recoveryInProgress, setRecoveryInProgress] = useState<Set<string>>(new Set())
   const [timeRange, setTimeRange] = useState({
     from: Date.now() - 60 * 60 * 1000,
     to: Date.now(),
@@ -296,6 +297,9 @@ export default function KilnOS() {
       prev.map((a) => (a.id === id ? { ...a, reported: true } : a))
     )
 
+    // Add to recovery set
+    setRecoveryInProgress((prev) => new Set([...prev, id]))
+
     // Recover the channel after 7–10 s
     const delay = 7000 + Math.random() * 3000
     recoveryTimers.current[id] = setTimeout(() => {
@@ -310,6 +314,12 @@ export default function KilnOS() {
         })
         // Acknowledge the alert
         return prev.map((a) => (a.id === id ? { ...a, acknowledged: true } : a))
+      })
+      // Remove from recovery set
+      setRecoveryInProgress((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
       })
       delete recoveryTimers.current[id]
     }, delay)
@@ -609,8 +619,8 @@ export default function KilnOS() {
 
         <div className="h-6 w-px bg-border shrink-0 hidden xl:block" />
 
-        {/* Live stats — only on xl+ */}
-        <div className="hidden xl:flex items-center gap-4 flex-1 min-w-0 overflow-hidden">
+        {/* Live stats — only on 2xl+ to prevent overflow */}
+        <div className="hidden 2xl:flex items-center gap-4 flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center gap-1.5 shrink-0">
             <Radio className="h-3.5 w-3.5 text-[var(--factory-cyan)]" />
             <div className="flex flex-col leading-none">
@@ -783,7 +793,21 @@ export default function KilnOS() {
 
                   {/* Panel body */}
                   <div className="relative flex-1 min-h-[240px] bg-[var(--background)]">
-                    {!isUp ? (
+                    {/* Recovery loading overlay */}
+                    {fault && recoveryInProgress.has(fault.id) && (
+                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[var(--background)]/95 backdrop-blur-sm">
+                        <div className="relative flex h-10 w-10 items-center justify-center">
+                          <span className="absolute inline-block h-10 w-10 rounded-full border-2 border-[var(--factory-amber)]/20" />
+                          <span className="absolute inline-block h-10 w-10 animate-spin rounded-full border-2 border-transparent border-t-[var(--factory-amber)]" />
+                          <span className="h-2 w-2 rounded-full bg-[var(--factory-amber)] animate-pulse" />
+                        </div>
+                        <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground">
+                          Recovery in progress...
+                        </span>
+                      </div>
+                    )}
+
+                    {!isUp && !recoveryInProgress.has(fault?.id ?? "") ? (
                       (() => {
                         const FaultIcon = fault?.icon ?? WifiOff
                         return (
