@@ -168,6 +168,21 @@ export default function KilnOS() {
   const [currentUser, setCurrentUser] = useState("")
   const [userRole, setUserRole] = useState("")
   const [error, setError] = useState("")
+  const [sessionChecked, setSessionChecked] = useState(false)
+
+  // Restore session on mount (survives Next.js client-side navigation)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("kiln_session")
+      if (saved) {
+        const { user, role } = JSON.parse(saved)
+        setCurrentUser(user)
+        setUserRole(role)
+        setIsLoggedIn(true)
+      }
+    } catch (_) {}
+    setSessionChecked(true)
+  }, [])
 
   const [refreshKey, setRefreshKey] = useState(0)
   const [timeRange, setTimeRange] = useState({
@@ -231,6 +246,7 @@ export default function KilnOS() {
     setIsLoggedIn(true)
     setUsername("")
     setPassword("")
+    sessionStorage.setItem("kiln_session", JSON.stringify({ user: user.username, role: user.role }))
     startSignalTracking()
   }
 
@@ -238,6 +254,7 @@ export default function KilnOS() {
     setIsLoggedIn(false)
     setCurrentUser("")
     setUserRole("")
+    sessionStorage.removeItem("kiln_session")
     if (signalIntervalRef.current) clearInterval(signalIntervalRef.current)
     setSignalHistory([])
     setMaxConcurrentSignals(0)
@@ -313,6 +330,9 @@ export default function KilnOS() {
     signalHistory.length > 0
       ? signalHistory[signalHistory.length - 1].activeSignals
       : 0
+
+  // ─── Hold render until session check is done (prevents login flash on back-nav)
+  if (!sessionChecked) return null
 
   // ─── Login screen
   if (!isLoggedIn) {
