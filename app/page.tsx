@@ -21,6 +21,10 @@ import {
   ExternalLink,
   FileText,
   WifiOff,
+  Zap,
+  Wind,
+  Waves,
+  Thermometer,
 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -45,23 +49,31 @@ const CHANNEL_DEFS = [
   { id: "panel-1", title: "Environment",         subtitle: "Temperature · Humidity · Vibration" },
 ]
 
-// ─── What each channel failure looks like
-const CHANNEL_FAULT_DESC: Record<string, { short: string; detail: string }> = {
+// ─── What each channel failure looks like, with a unique icon per fault type
+const CHANNEL_FAULT_DESC: Record<string, {
+  short: string
+  detail: string
+  icon: React.ElementType
+}> = {
   "panel-5": {
     short: "Power feed anomaly",
     detail: "Voltage drop detected on Line 1. Current reading 34 A below nominal. PF degraded to 0.71. Possible contactor fault or loose terminal.",
+    icon: Zap,
   },
   "panel-4": {
     short: "Air quality sensor offline",
     detail: "PM2.5 probe returned no data for 12 s. CO2 reading frozen at last known value. Possible I2C bus fault or sensor power loss.",
+    icon: Wind,
   },
   "panel-3": {
     short: "Vibration threshold exceeded",
-    detail: "Z-axis RMS envelope at 0.0412 g — 68 % above safe limit. X-axis drift also elevated. Bearing wear or mounting looseness suspected.",
+    detail: "Z-axis RMS envelope at 0.0412 g — 68% above safe limit. X-axis drift also elevated. Bearing wear or mounting looseness suspected.",
+    icon: Waves,
   },
   "panel-1": {
     short: "Environment module fault",
     detail: "Temperature sensor disconnected (reads -127 °C). Humidity data unavailable. Module may require re-seating or firmware reset.",
+    icon: Thermometer,
   },
 }
 
@@ -81,6 +93,7 @@ interface Alert {
   channelId: string
   title: string
   detail: string
+  icon: React.ElementType
   ts: number
   acknowledged: boolean
   reported: boolean
@@ -225,6 +238,7 @@ export default function KilnOS() {
       channelId: victim,
       title: faultInfo.short,
       detail: faultInfo.detail,
+      icon: faultInfo.icon,
       ts: Date.now(),
       acknowledged: false,
       reported: false,
@@ -234,7 +248,7 @@ export default function KilnOS() {
 
   // ─── Schedule random events every 20–40 s
   const scheduleNextEvent = useCallback(() => {
-    const delay = 10000 + Math.random() * 5000
+    const delay = 40000 + Math.random() * 20000
     eventTimerRef.current = setTimeout(() => {
       triggerChannelEvent()
       scheduleNextEvent()
@@ -728,13 +742,16 @@ export default function KilnOS() {
                   {/* Panel body */}
                   <div className="relative flex-1 min-h-[240px] bg-[var(--background)]">
                     {!isUp ? (
+                      (() => {
+                        const FaultIcon = fault?.icon ?? WifiOff
+                        return (
                       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--background)]">
-                        <WifiOff className="h-8 w-8 text-[var(--factory-amber)]/60" />
-                        <div className="flex flex-col items-center gap-1 text-center px-6">
-                          <span className="text-xs font-semibold text-[var(--factory-amber)]">
+                        <FaultIcon className="h-9 w-9 text-[var(--factory-amber)]/70" />
+                        <div className="flex flex-col items-center gap-1.5 text-center px-6">
+                          <span className="text-sm font-semibold text-[var(--factory-amber)]">
                             {fault?.title ?? "Channel Offline"}
                           </span>
-                          <span className="text-[10px] text-muted-foreground leading-relaxed max-w-[240px]">
+                          <span className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
                             {fault?.detail ?? "No data. Awaiting incident report."}
                           </span>
                         </div>
@@ -746,6 +763,8 @@ export default function KilnOS() {
                           View in Alerts
                         </button>
                       </div>
+                        )
+                      })()
                     ) : (
                       <TelemetryFrame
                         key={`${panel.id}-${refreshKey}`}
@@ -791,6 +810,7 @@ export default function KilnOS() {
               <div className="flex flex-col gap-3">
                 {alerts.map((alert) => {
                   const channel = CHANNEL_DEFS.find((c) => c.id === alert.channelId)
+                  const FaultIcon = alert.icon ?? WifiOff
                   return (
                     <div
                       key={alert.id}
@@ -810,7 +830,7 @@ export default function KilnOS() {
                           {alert.acknowledged ? (
                             <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--factory-green)]" />
                           ) : (
-                            <AlertTriangle className={`h-4 w-4 shrink-0 text-[var(--factory-amber)] ${!alert.reported ? "animate-pulse" : ""}`} />
+                            <FaultIcon className={`h-4 w-4 shrink-0 text-[var(--factory-amber)] ${!alert.reported ? "animate-pulse" : ""}`} />
                           )}
                           <div className="flex flex-col leading-none gap-0.5">
                             <span className="text-xs font-bold text-foreground">{alert.title}</span>
