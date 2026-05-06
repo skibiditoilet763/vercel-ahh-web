@@ -142,40 +142,6 @@ function LiveClock() {
   return <span className="font-mono text-xs text-muted-foreground tabular-nums">{time}</span>
 }
 
-// ─── Sparkline
-function SignalSparkline({ history }: { history: SignalRecord[] }) {
-  if (history.length < 2) return null
-  const max = Math.max(...history.map((r) => r.activeSignals), 1)
-  return (
-    <div className="flex items-end gap-px h-6">
-      {history.slice(-20).map((r, i) => (
-        <div
-          key={i}
-          className="w-1 rounded-sm bg-[var(--factory-cyan)] opacity-70"
-          style={{ height: `${Math.round((r.activeSignals / max) * 100)}%` }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ─── System load sparkline (amber)
-function LoadSparkline({ history }: { history: number[] }) {
-  if (history.length < 2) return null
-  const max = 100
-  return (
-    <div className="flex items-end gap-px h-6">
-      {history.slice(-20).map((v, i) => (
-        <div
-          key={i}
-          className={`w-1 rounded-sm ${v > 75 ? "bg-[var(--factory-orange)]" : v > 50 ? "bg-[var(--factory-amber)]" : "bg-[var(--factory-green)]"} opacity-80`}
-          style={{ height: `${Math.round((v / max) * 100)}%` }}
-        />
-      ))}
-    </div>
-  )
-}
-
 // ─── Alerts hover panel
 function AlertBadge({ alerts, onReport }: { alerts: Alert[]; onReport: (id: string) => void }) {
   const [open, setOpen] = useState(false)
@@ -355,7 +321,6 @@ export default function KilnOS() {
 
   // ─── System load
   const [productionLoad, setProductionLoad] = useState(18) // base production contribution
-  const [loadHistory, setLoadHistory] = useState<number[]>([])
 
   // ─── Alerts
   const [alerts, setAlerts] = useState<Alert[]>([])
@@ -373,18 +338,6 @@ export default function KilnOS() {
     }, 4000)
     return () => clearInterval(id)
   }, [])
-
-  // ─── Record load history
-  useEffect(() => {
-    const id = setInterval(() => {
-      setLoadHistory((prev) => {
-        const next = [...prev, systemLoad]
-        if (next.length > 30) next.shift()
-        return next
-      })
-    }, 2000)
-    return () => clearInterval(id)
-  }, [systemLoad])
 
   // ─── Random channel failure simulator
   const triggerChannelEvent = useCallback(() => {
@@ -712,22 +665,19 @@ export default function KilnOS() {
               <span className="text-[9px] tracking-widest uppercase text-muted-foreground">System Load</span>
               <span className="text-xs font-bold tabular-nums">{systemLoad} %</span>
             </div>
-            <LoadSparkline history={loadHistory} />
+          </div>
+
+          {/* Throughput — number only, no graph */}
+          <div className="flex items-center gap-1.5 text-[var(--factory-cyan)]">
+            <Activity className="h-3.5 w-3.5" />
+            <div className="flex flex-col leading-none">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground">Throughput</span>
+              <span className="text-xs font-bold tabular-nums">{currentActiveSignals} sig/s</span>
+            </div>
           </div>
 
           {/* Alerts — hover to see detail */}
           <AlertBadge alerts={alerts} onReport={handleReport} />
-
-          {/* Throughput sparkline */}
-          <div className="flex items-center gap-2 ml-2">
-            <SignalSparkline history={signalHistory} />
-            {signalHistory.length > 0 && (
-              <div className="flex flex-col leading-none">
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground">Throughput</span>
-                <span className="text-xs font-bold text-[var(--factory-cyan)] tabular-nums">{currentActiveSignals} sig/s</span>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Controls */}
