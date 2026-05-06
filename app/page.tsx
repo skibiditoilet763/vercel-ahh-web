@@ -180,6 +180,7 @@ export default function KilnOS() {
 
   const [activeTab, setActiveTab] = useState<"dashboard" | "alerts">("dashboard")
   const [refreshKey, setRefreshKey] = useState(0)
+  const [alertFilter, setAlertFilter] = useState<"all" | "in-progress" | "resolved">("all")
   const [timeRange, setTimeRange] = useState({
     from: Date.now() - 60 * 60 * 1000,
     to: Date.now(),
@@ -203,8 +204,42 @@ export default function KilnOS() {
   // ─── Alerts
   const [alerts, setAlerts] = useState<Alert[]>([])
 
+  // ─── Persist alerts to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem("kiln_incidents", JSON.stringify(alerts))
+    } catch (_) {}
+  }, [alerts])
+
+  // ─── Restore alerts from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("kiln_incidents")
+      if (saved) {
+        const restored = JSON.parse(saved) as Alert[]
+        setAlerts(restored)
+      }
+    } catch (_) {}
+  }, [])
+
   // Derived: current system load
   const systemLoad = computeSystemLoad(activeChannels.size, productionLoad)
+
+  // ─── Filter alerts by status
+  const getFilteredAlerts = () => {
+    switch (alertFilter) {
+      case "in-progress":
+        return alerts.filter((a) => !a.acknowledged && (a.reported || !a.reported))
+      case "resolved":
+        return alerts.filter((a) => a.acknowledged)
+      case "all":
+      default:
+        return alerts
+    }
+  }
+  const filteredAlerts = getFilteredAlerts()
+  const inProgressCount = alerts.filter((a) => !a.acknowledged).length
+  const resolvedCount = alerts.filter((a) => a.acknowledged).length
 
   // ─── Production load drifts slightly over time (realistic)
   useEffect(() => {
@@ -783,33 +818,96 @@ export default function KilnOS() {
         {/* Alerts tab */}
         {activeTab === "alerts" && (
           <div className="h-full overflow-y-auto">
-          <div className="p-6 max-w-3xl mx-auto">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <h2 className="text-sm font-bold tracking-widest uppercase text-foreground">Incident Log</h2>
-                <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
-                  {activeAlerts.length} active &mdash; {alerts.filter((a) => a.acknowledged).length} resolved
-                </p>
-              </div>
-              {activeAlerts.length === 0 && (
-                <div className="flex items-center gap-2 rounded-sm border border-[var(--factory-green)]/30 bg-[var(--factory-green)]/5 px-3 py-2">
-                  <CheckCircle2 className="h-4 w-4 text-[var(--factory-green)]" />
-                  <span className="text-xs text-[var(--factory-green)] font-semibold tracking-wide">All systems nominal</span>
+          <div className="p-6 max-w-4xl mx-auto">
+            <div className="mb-6 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-0.5">
+                  <h2 className="text-sm font-bold tracking-widest uppercase text-foreground">Incident Log</h2>
+                  <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                    {inProgressCount} in progress &mdash; {resolvedCount} resolved
+                  </p>
                 </div>
-              )}
+                {inProgressCount === 0 && (
+                  <div className="flex items-center gap-2 rounded-sm border border-[var(--factory-green)]/30 bg-[var(--factory-green)]/5 px-3 py-2">
+                    <CheckCircle2 className="h-4 w-4 text-[var(--factory-green)]" />
+                    <span className="text-xs text-[var(--factory-green)] font-semibold tracking-wide">All systems nominal</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Filter buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setAlertFilter("all")}
+                  className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+                    alertFilter === "all"
+                      ? "bg-[var(--factory-cyan)] text-[var(--background)]"
+                      : "border border-border text-muted-foreground hover:text-foreground hover:bg-[var(--factory-panel)]"
+                  }`}
+                >
+                  All
+                  <span className="text-[9px] font-mono">{alerts.length}</span>
+                </button>
+                <button
+                  onClick={() => setAlertFilter("in-progress")}
+                  className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+                    alertFilter === "in-progress"
+                      ? "bg-[var(--factory-amber)] text-white"
+                      : inProgressCount > 0
+                      ? "border border-[var(--factory-amber)]/40 text-[var(--factory-amber)] hover:bg-[var(--factory-amber)]/10"
+                      : "border border-border text-muted-foreground"
+                  }`}
+                >
+                  In Progress
+                  <span className="text-[9px] font-mono">{inProgressCount}</span>
+                </button>
+                <button
+                  onClick={() => setAlertFilter("resolved")}
+                  className={`flex items-center gap-1.5 h-7 px-3 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+                    alertFilter === "resolved"
+                      ? "bg-[var(--factory-green)] text-white"
+                      : resolvedCount > 0
+                      ? "border border-[var(--factory-green)]/40 text-[var(--factory-green)] hover:bg-[var(--factory-green)]/10"
+                      : "border border-border text-muted-foreground"
+                  }`}
+                >
+                  Resolved
+                  <span className="text-[9px] font-mono">{resolvedCount}</span>
+                </button>
+              </div>
             </div>
 
-            {alerts.length === 0 ? (
+            {filteredAlerts.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-                <CheckCircle2 className="h-12 w-12 text-[var(--factory-green)]/40" />
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-semibold text-muted-foreground">No incidents recorded</span>
-                  <span className="text-xs text-muted-foreground">Incidents will appear here when channels report faults</span>
-                </div>
+                {alertFilter === "all" ? (
+                  <>
+                    <CheckCircle2 className="h-12 w-12 text-[var(--factory-green)]/40" />
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-semibold text-muted-foreground">No incidents recorded</span>
+                      <span className="text-xs text-muted-foreground">Incidents will appear here when channels report faults</span>
+                    </div>
+                  </>
+                ) : alertFilter === "in-progress" ? (
+                  <>
+                    <CheckCircle2 className="h-12 w-12 text-[var(--factory-green)]/40" />
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-semibold text-muted-foreground">No active incidents</span>
+                      <span className="text-xs text-muted-foreground">All channels operational</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-12 w-12 text-muted-foreground/30" />
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-semibold text-muted-foreground">No resolved incidents</span>
+                      <span className="text-xs text-muted-foreground">Past incidents will show here</span>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {alerts.map((alert) => {
+                {filteredAlerts.map((alert) => {
                   const channel = CHANNEL_DEFS.find((c) => c.id === alert.channelId)
                   const FaultIcon = alert.icon ?? WifiOff
                   return (
